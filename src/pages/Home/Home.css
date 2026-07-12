@@ -41,7 +41,7 @@
 }
 
 .hero-section-new {
-    min-height: 100vh;
+    min-height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -63,6 +63,29 @@
 
 .hero-content-new {
     margin-bottom: clamp(40px, 10vh, 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.hero-logo {
+    height: 150px; /* Perfectly smaller */
+    width: auto;
+    margin: 0 auto 20px auto;
+    display: block;
+    animation: rotate3D 18s linear infinite;
+    transform-style: preserve-3d;
+    filter: invert(1) drop-shadow(0px 0px 10px rgba(255,255,255,0.2));
+    mix-blend-mode: screen; /* Makes white background transparent on dark background */
+}
+
+@keyframes rotate3D {
+    from {
+        transform: perspective(600px) rotateY(0deg);
+    }
+    to {
+        transform: perspective(600px) rotateY(360deg);
+    }
 }
 
 .hero-content-new h1 {
@@ -161,39 +184,27 @@
 
 @media (max-width: 768px) {
     .hero-content-new h1 {
-        font-size: 4.5rem;
+        font-size: clamp(3.5rem, 12vw, 4.5rem);
+        line-height: 1;
     }
 
     .hero-buttons {
-        flex-direction: row;
-        gap: 20px;
+        flex-direction: column;
+        gap: 15px;
         width: 100%;
-        max-width: 280px;
-        margin: 0 2rem;
+        max-width: 320px;
+        margin: 0 auto;
     }
 
     .hero-btn {
         width: 100%;
-        padding: 15px 30px;
+        padding: 15px 20px;
+        min-width: 100%;
     }
-}
-
-@media (max-width: 600px) {
-    .hero-content-new h1 {
-        font-size: 4.5rem;
-    }
-
-    .hero-buttons {
-        flex-direction: row;
-        gap: 20px;
-        width: 100%;
-        max-width: 280px;
-        margin: 0 2rem;
-    }
-
-    .hero-btn {
-        width: 100%;
-        padding: 15px 30px;
+    
+    .hero-logo {
+        height: 70px;
+        margin-bottom: 30px;
     }
 }
 
@@ -267,15 +278,25 @@
 }
 
 @media (max-width: 768px) {
+    .intro-text-container {
+        gap: 10px;
+    }
+
     .intro-text {
-        font-size: clamp(2.5rem, 8vw, 5rem);
-        letter-spacing: 0.15em;
+        font-size: clamp(2rem, 10vw, 3.5rem);
+        letter-spacing: 0.1em;
     }
 
     .intro-text-ajidhas,
     .intro-text-associates {
-        padding-left: 5%;
-        padding-right: 5%;
+        padding-left: 0;
+        padding-right: 0;
+        text-align: center;
+        width: auto;
+    }
+    
+    .intro-text-associates {
+        padding-bottom: 30%;
     }
 }
 

@@ -96,7 +96,7 @@
     height: var(--card-height);
     position: relative;
     cursor: pointer;
-    transform: rotateY(-25deg);
+    transform: rotateY(-45deg);
     transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.8s ease;
     transform-style: preserve-3d;
 }
@@ -252,45 +252,84 @@
 
 @media (max-width: 768px) {
     :root {
-        --card-width: 220px;
-        --card-height: 330px;
-        --card-gap: 40px;
-    }
-
-    .gallery-3d-track {
-        animation: slideInfinite 35s linear infinite;
-    }
-
-    .gallery-card {
-        transform: rotateY(-15deg);
+        --card-width: 75vw;
+        --card-height: 55vh;
+        --card-gap: 20px;
     }
 
     .gallery-header {
-        padding: 80px 20px 20px;
+        padding: 100px 20px 20px;
+        align-items: center;
+        text-align: center;
     }
 
     .header-title {
-        font-size: 1.8rem;
+        font-size: 2.2rem;
     }
-}
 
-@media (hover: none) {
     .gallery-3d-viewport {
+        padding: 20px 0;
         overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    
+    .gallery-3d-viewport::-webkit-scrollbar {
+        display: none;
     }
 
     .gallery-3d-track {
         animation: none;
-        padding-right: 100px;
+        padding: 0 calc(12.5vw); /* Center the first card */
+        width: max-content;
+        display: flex;
+        gap: var(--card-gap);
+    }
+
+    .gallery-card-container {
+        scroll-snap-align: center;
     }
 
     .gallery-card {
-        transform: none;
+        transform: rotateY(0deg) !important; /* Flat for mobile */
+        transition: transform 0.3s ease;
+    }
+
+    .card-content {
+        opacity: 1; /* Always show text on mobile */
+        transform: translateY(0);
+        padding: 20px;
+        text-align: center;
+    }
+
+    .card-label {
+        font-size: 0.7rem;
+    }
+
+    .card-title {
+        font-size: 1.4rem;
     }
 
     .card-overlay {
-        opacity: 0.6;
+        opacity: 1;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0) 100%);
+    }
+}
+
+@media (hover: none) and (max-width: 1024px) {
+    .gallery-3d-track {
+        animation: none;
+    }
+
+    .gallery-card {
+        transform: rotateY(0deg) !important;
+    }
+
+    .card-overlay {
+        opacity: 1;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 50%);
     }
 
     .card-content {

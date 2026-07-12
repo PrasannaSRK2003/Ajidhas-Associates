@@ -424,7 +424,7 @@
         height: 35px;
     }
     .menu-link {
-        font-size: 4rem;
+        font-size: clamp(2.5rem, 8vw, 4rem);
     }
 
     .menu-bottom {
