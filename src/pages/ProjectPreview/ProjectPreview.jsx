@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { IoArrowBack, IoAddOutline } from 'react-icons/io5';
+import { IoAddOutline } from 'react-icons/io5';
+import { gsap } from 'gsap';
 import './ProjectPreview.css';
 
 import art1 from '../../assets/art_1.png';
@@ -31,64 +32,89 @@ const ProjectPreview = () => {
     const images = projectImages[id] || projectImages[1];
     const project = projectData[id] || projectData[1];
 
-    const [rotation, setRotation] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState(null);
+    const [activeIndex, setActiveIndex] = useState(0);
     const requestRef = useRef();
+    const cardRefs = useRef([]);
+    const backgroundRefs = useRef([]);
+    const rotationRef = useRef(0);
+    const isPausedRef = useRef(false);
+    const hoveredIndexRef = useRef(null);
+    const activeIndexRef = useRef(0);
+    const applyRotationRef = useRef(() => {});
 
-    // Calculate which image is currently at the front
     const total = images.length;
     const angleStep = 360 / total;
-    const activeIndex = Math.round(((-rotation % 360) + 360) % 360 / angleStep) % total;
 
     useEffect(() => {
         window.scrollTo(0, 0);
 
+        rotationRef.current = 0;
+        activeIndexRef.current = 0;
+
+        const applyRotation = () => {
+            const rotation = rotationRef.current;
+            const normalizedRotation = ((-rotation % 360) + 360) % 360;
+            const nextActiveIndex = Math.round(normalizedRotation / angleStep) % total;
+
+            if (nextActiveIndex !== activeIndexRef.current) {
+                activeIndexRef.current = nextActiveIndex;
+                setActiveIndex(nextActiveIndex);
+            }
+
+            backgroundRefs.current.forEach((background, index) => {
+                background?.classList.toggle('active', index === nextActiveIndex);
+            });
+
+            cardRefs.current.forEach((card, index) => {
+                if (!card) return;
+
+                if (hoveredIndexRef.current === index) {
+                    gsap.set(card, {
+                        x: 0,
+                        z: 600,
+                        scale: 1.1,
+                        rotationY: 0,
+                        zIndex: 2000,
+                        opacity: 1,
+                        filter: 'blur(0px)',
+                    });
+                    return;
+                }
+
+                const currentAngle = (angleStep * index + rotation) % 360;
+                const angleRad = (currentAngle * Math.PI) / 180;
+                const radiusX = window.innerWidth > 1200 ? 500 : (window.innerWidth > 768 ? 400 : 250);
+                const radiusZ = 500;
+                const x = Math.sin(angleRad) * radiusX;
+                const z = Math.cos(angleRad) * radiusZ;
+                const normalizedZ = (z + radiusZ) / (2 * radiusZ);
+
+                gsap.set(card, {
+                    x,
+                    z,
+                    scale: normalizedZ * 0.6 + 0.4,
+                    rotationY: -Math.sin(angleRad) * 20,
+                    zIndex: Math.round(z + radiusZ),
+                    opacity: normalizedZ * 0.8 + 0.2,
+                    filter: `blur(${(1 - normalizedZ) * 6}px)`,
+                });
+            });
+        };
+        applyRotationRef.current = applyRotation;
+
         const animate = () => {
-            if (!isPaused) {
-                setRotation(prev => prev - 0.15);
+            if (!isPausedRef.current) {
+                rotationRef.current -= 0.15;
+                applyRotation();
             }
             requestRef.current = requestAnimationFrame(animate);
         };
 
+        applyRotation();
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
-    }, [isPaused]);
-
-    const getCardStyle = (index) => {
-        const currentAngle = (angleStep * index + rotation) % 360;
-        const angleRad = (currentAngle * Math.PI) / 180;
-
-        const radiusX = window.innerWidth > 1200 ? 500 : (window.innerWidth > 768 ? 400 : 250);
-        const radiusZ = 500;
-
-        const x = Math.sin(angleRad) * radiusX;
-        const z = Math.cos(angleRad) * radiusZ;
-
-        const normalizedZ = (z + radiusZ) / (2 * radiusZ);
-        const scale = normalizedZ * 0.6 + 0.4;
-        const opacity = normalizedZ * 0.8 + 0.2;
-        const blur = (1 - normalizedZ) * 6;
-        const rotateY = -Math.sin(angleRad) * 20;
-
-        if (hoveredIndex === index) {
-            return {
-                transform: `translate3d(0, 0, 600px) scale(1.1) rotateY(0deg)`,
-                zIndex: 2000,
-                opacity: 1,
-                filter: 'blur(0px)',
-                transition: 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease, filter 0.6s ease'
-            };
-        }
-
-        return {
-            transform: `translate3d(${x}px, 0, ${z}px) scale(${scale}) rotateY(${rotateY}deg)`,
-            zIndex: Math.round(z + radiusZ),
-            opacity: opacity,
-            filter: `blur(${blur}px)`,
-            transition: 'transform 0.1s linear, opacity 0.4s ease, filter 0.4s ease'
-        };
-    };
+    }, [angleStep, id, total]);
 
     return (
         <div className="project-preview-container circular-layout">
@@ -98,6 +124,7 @@ const ProjectPreview = () => {
                     <div
                         key={index}
                         className={`bg-image-layer ${activeIndex === index ? 'active' : ''}`}
+                        ref={el => { backgroundRefs.current[index] = el; }}
                         style={{ backgroundImage: `url(${img})` }}
                     />
                 ))}
@@ -121,14 +148,18 @@ const ProjectPreview = () => {
                         <div
                             key={index}
                             className={`preview-card-3d ${hoveredIndex === index ? 'hovered' : ''}`}
-                            style={getCardStyle(index)}
+                            ref={el => { cardRefs.current[index] = el; }}
                             onMouseEnter={() => {
-                                setIsPaused(true);
+                                isPausedRef.current = true;
+                                hoveredIndexRef.current = index;
                                 setHoveredIndex(index);
+                                applyRotationRef.current();
                             }}
                             onMouseLeave={() => {
-                                setIsPaused(false);
+                                isPausedRef.current = false;
+                                hoveredIndexRef.current = null;
                                 setHoveredIndex(null);
+                                applyRotationRef.current();
                             }}
                             onClick={() => navigate(`/art/project/${id}`)}
                         >

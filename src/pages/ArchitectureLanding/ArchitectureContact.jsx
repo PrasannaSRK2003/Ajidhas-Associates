@@ -1,12 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './ArchitectureContact.css';
 import mapBg from '../../assets/dark_architectural_map.png';
 
 
 const ArchitectureContact = () => {
-  const navigate = useNavigate();
   const containerRef = useRef(null);
   const formRef = useRef(null);
   const infoRef = useRef(null);

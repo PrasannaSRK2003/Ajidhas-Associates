@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
@@ -8,6 +8,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const useLocoScroll = (start = true) => {
     const location = useLocation();
+    const lenisRef = useRef(null);
 
     useEffect(() => {
         if (!start) return;
@@ -23,17 +24,18 @@ const useLocoScroll = (start = true) => {
             touchMultiplier: 2,
         });
 
-        // Sync ScrollTrigger with Lenis
-        lenis.on('scroll', ScrollTrigger.update);
+        lenisRef.current = lenis;
+        const handleLenisScroll = () => ScrollTrigger.update();
+        lenis.on('scroll', handleLenisScroll);
 
+        let rafId;
+        let isActive = true;
         const raf = (time) => {
+            if (!isActive) return;
             lenis.raf(time);
-            requestAnimationFrame(raf);
+            rafId = requestAnimationFrame(raf);
         };
-        requestAnimationFrame(raf);
-
-        // Re-sync on route change
-        lenis.scrollTo(0, { immediate: true });
+        rafId = requestAnimationFrame(raf);
 
         // Handle resize
         const handleResize = () => {
@@ -42,10 +44,18 @@ const useLocoScroll = (start = true) => {
         window.addEventListener('resize', handleResize);
 
         return () => {
+            isActive = false;
+            cancelAnimationFrame(rafId);
+            lenis.off('scroll', handleLenisScroll);
             lenis.destroy();
+            lenisRef.current = null;
             window.removeEventListener('resize', handleResize);
         };
-    }, [start, location.pathname]);
+    }, [start]);
+
+    useEffect(() => {
+        lenisRef.current?.scrollTo(0, { immediate: true });
+    }, [location.pathname]);
 };
 
 export default useLocoScroll;

@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { IoArrowBack, IoClose } from 'react-icons/io5';
+import { IoClose } from 'react-icons/io5';
 import './Landscape.css';
 
 import bg1 from '../../assets/hero_bg_night.png';
@@ -20,11 +19,7 @@ const clusterItems = [
     { id: 6, title: "Night Lights", desc: "The city comes alive after dark.", width: 200, height: 160, top: '75%', left: '40%' },
 ];
 
-// Duplicate cluster for seamless loop
-const allItems = [...clusterItems, ...clusterItems.map(item => ({ ...item, id: item.id + 100 }))];
-
 const Landscape = () => {
-    const navigate = useNavigate();
     const trackRef = useRef(null);
     const [selectedItem, setSelectedItem] = useState(null);
     const modalImgRef = useRef(null);

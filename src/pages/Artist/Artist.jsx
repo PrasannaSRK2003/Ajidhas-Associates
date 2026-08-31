@@ -1,15 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IoArrowBack } from 'react-icons/io5';
 import './Artist.css';
 import artistImg from '../../assets/artist_new_profile.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Artist = () => {
-    const navigate = useNavigate();
     const sectionRef = useRef(null);
     const imageRef = useRef(null);
     const textRef = useRef(null);
@@ -17,6 +14,8 @@ const Artist = () => {
     const statsRef = useRef(null);
 
     useEffect(() => {
+        let handleMouseMove;
+        const ctx = gsap.context(() => {
         // Entrance Animation
         const tl = gsap.timeline({
             scrollTrigger: {
@@ -69,7 +68,7 @@ const Artist = () => {
         });
 
         // Mouse Move Parallax
-        const handleMouseMove = (e) => {
+        handleMouseMove = (e) => {
             const { clientX, clientY } = e;
             const xPos = (clientX / window.innerWidth - 0.5) * 40;
             const yPos = (clientY / window.innerHeight - 0.5) * 40;
@@ -112,9 +111,11 @@ const Artist = () => {
             }
         });
 
+        }, containerRef);
+
         return () => {
             window.removeEventListener('mousemove', handleMouseMove);
-            ScrollTrigger.getAll().forEach(t => t.kill());
+            ctx.revert();
         };
     }, []);
 

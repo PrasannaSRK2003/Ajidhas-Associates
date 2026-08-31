@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IoArrowBack } from 'react-icons/io5';
 import './Collaboration.css';
 
 // Using existing high-quality assets
@@ -48,14 +46,14 @@ const collabData = [
 ];
 
 const Collaboration = () => {
-    const navigate = useNavigate();
     const containerRef = useRef(null);
     const sectionsRef = useRef([]);
 
     useEffect(() => {
+        const ctx = gsap.context(() => {
         const sections = sectionsRef.current;
 
-        sections.forEach((section, i) => {
+            sections.forEach((section) => {
             if (!section) return;
 
             const bgImg = section.querySelector('.collab-bg-image');
@@ -176,14 +174,10 @@ const Collaboration = () => {
                 );
         });
 
-        return () => {
-            ScrollTrigger.getAll().forEach(t => t.kill());
-        };
-    }, []);
+        }, containerRef);
 
-    const handleBack = () => {
-        navigate('/architecture');
-    };
+        return () => ctx.revert();
+    }, []);
 
     const splitText = (text) => {
         return text.split('').map((char, index) => (

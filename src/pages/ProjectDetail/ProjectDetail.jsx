@@ -48,10 +48,12 @@ const ProjectDetail = () => {
 
     const heroRef = useRef(null);
     const galleryRef = useRef(null);
+    const containerRef = useRef(null);
 
     useEffect(() => {
         window.scrollTo(0, 0);
 
+        const ctx = gsap.context(() => {
         const tl = gsap.timeline();
 
         tl.fromTo('.hero-content > *',
@@ -92,13 +94,13 @@ const ProjectDetail = () => {
             }
         );
 
-        return () => {
-            ScrollTrigger.getAll().forEach(t => t.kill());
-        };
+        }, containerRef);
+
+        return () => ctx.revert();
     }, [id]);
 
     return (
-        <div className="project-detail-page">
+        <div className="project-detail-page" ref={containerRef}>
             <div className="detail-dynamic-bg" style={{ backgroundImage: `url(${project.mainImage})` }}>
                 <div className="bg-overlay-dark"></div>
             </div>

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './Visualisation.css';
@@ -103,40 +102,51 @@ const projects = [
 const Visualisation = () => {
     const scrollAreaRef = useRef(null);
     const projectRefs = useRef([]);
-    const [isPaused, setIsPaused] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
+    const isPausedRef = useRef(false);
+    const activeIndexRef = useRef(0);
+    const resumeTimerRef = useRef();
+    const loopTimerRef = useRef();
+
+    const setPaused = useCallback((paused) => {
+        isPausedRef.current = paused;
+    }, []);
+
+    const scrollToIndex = useCallback((index) => {
+        const target = projectRefs.current[index];
+        const scrollArea = scrollAreaRef.current;
+        if (target && scrollArea) {
+            scrollArea.scrollTo({
+                top: target.offsetTop,
+                behavior: 'smooth'
+            });
+            activeIndexRef.current = index % projects.length;
+            setActiveIndex(activeIndexRef.current);
+        }
+    }, []);
 
     // Auto-scrolling logic - Snap to next every 5 seconds
     useEffect(() => {
         const scrollArea = scrollAreaRef.current;
         if (!scrollArea) return;
 
-        let intervalId;
+        const advance = () => {
+            if (isPausedRef.current) return;
 
-        const startAutoScroll = () => {
-            intervalId = setInterval(() => {
-                if (!isPaused) {
-                    const nextIndex = activeIndex + 1;
-
-                    if (nextIndex >= projects.length) {
-                        // If at the last real project, scroll to the clone
-                        scrollToIndex(nextIndex);
-                        // Then jump back to start after animation
-                        setTimeout(() => {
-                            const scrollArea = scrollAreaRef.current;
-                            if (scrollArea) {
-                                scrollArea.scrollTo({ top: 0, behavior: 'auto' });
-                                setActiveIndex(0);
-                            }
-                        }, 800); // Wait for smooth scroll to finish
-                    } else {
-                        scrollToIndex(nextIndex);
-                    }
-                }
-            }, 5000);
+            const nextIndex = activeIndexRef.current + 1;
+            if (nextIndex >= projects.length) {
+                scrollToIndex(nextIndex);
+                loopTimerRef.current = window.setTimeout(() => {
+                    scrollArea.scrollTo({ top: 0, behavior: 'auto' });
+                    activeIndexRef.current = 0;
+                    setActiveIndex(0);
+                }, 800);
+            } else {
+                scrollToIndex(nextIndex);
+            }
         };
 
-        startAutoScroll();
+        const intervalId = window.setInterval(advance, 5000);
 
         // Drag to scroll variables
         let isDragging = false;
@@ -148,19 +158,19 @@ const Visualisation = () => {
             scrollArea.classList.add('grabbing');
             startY = e.pageY - scrollArea.offsetTop;
             scrollTop = scrollArea.scrollTop;
-            setIsPaused(true);
+            setPaused(true);
         };
 
         const handleMouseLeave = () => {
             isDragging = false;
             scrollArea.classList.remove('grabbing');
-            setIsPaused(false);
+            setPaused(false);
         };
 
         const handleMouseUp = () => {
             isDragging = false;
             scrollArea.classList.remove('grabbing');
-            setIsPaused(false);
+            setPaused(false);
 
             // Snap to nearest section after drag
             const newIndex = Math.round(scrollArea.scrollTop / window.innerHeight);
@@ -176,10 +186,10 @@ const Visualisation = () => {
         };
 
         const handleWheel = () => {
-            setIsPaused(true);
-            clearTimeout(window.resumeScrollTimeout);
-            window.resumeScrollTimeout = setTimeout(() => {
-                setIsPaused(false);
+            setPaused(true);
+            clearTimeout(resumeTimerRef.current);
+            resumeTimerRef.current = window.setTimeout(() => {
+                setPaused(false);
             }, 3000);
         };
 
@@ -193,12 +203,14 @@ const Visualisation = () => {
             // Seamless loop jump
             if (scrollPos >= totalHeight) {
                 scrollArea.scrollTo({ top: 0, behavior: 'auto' });
+                activeIndexRef.current = 0;
                 setActiveIndex(0);
                 return;
             }
 
             const index = Math.round(scrollPos / window.innerHeight);
-            if (index !== activeIndex && index < projects.length) {
+            if (index !== activeIndexRef.current && index < projects.length) {
+                activeIndexRef.current = index;
                 setActiveIndex(index);
             }
         };
@@ -207,7 +219,7 @@ const Visualisation = () => {
         scrollArea.addEventListener('mouseleave', handleMouseLeave);
         scrollArea.addEventListener('mouseup', handleMouseUp);
         scrollArea.addEventListener('mousemove', handleMouseMove);
-        scrollArea.addEventListener('wheel', handleWheel);
+        scrollArea.addEventListener('wheel', handleWheel, { passive: true });
         scrollArea.addEventListener('scroll', handleScroll);
 
         return () => {
@@ -218,25 +230,13 @@ const Visualisation = () => {
             scrollArea.removeEventListener('mousemove', handleMouseMove);
             scrollArea.removeEventListener('wheel', handleWheel);
             scrollArea.removeEventListener('scroll', handleScroll);
-            clearTimeout(window.resumeScrollTimeout);
+            clearTimeout(resumeTimerRef.current);
+            clearTimeout(loopTimerRef.current);
         };
-    }, [isPaused, activeIndex]);
-
-    const scrollToIndex = (index) => {
-        const target = projectRefs.current[index];
-        const scrollArea = scrollAreaRef.current;
-        if (target && scrollArea) {
-            scrollArea.scrollTo({
-                top: target.offsetTop,
-                behavior: 'smooth'
-            });
-            setActiveIndex(index);
-        }
-    };
+    }, [scrollToIndex, setPaused]);
 
     useEffect(() => {
-        ScrollTrigger.getAll().forEach(t => t.kill());
-
+        const ctx = gsap.context(() => {
         const sections = gsap.utils.toArray('.vis-story-section');
 
         sections.forEach((section) => {
@@ -331,8 +331,9 @@ const Visualisation = () => {
                 .fromTo(title, { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8 }, "-=0.4")
                 .fromTo(desc, { opacity: 0, y: 20, filter: "blur(5px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6 }, "-=0.4");
         });
+        }, scrollAreaRef);
 
-        return () => ScrollTrigger.getAll().forEach(t => t.kill());
+        return () => ctx.revert();
     }, []);
 
     return (
@@ -340,8 +341,7 @@ const Visualisation = () => {
             <div
                 className="vis-scroll-area"
                 ref={scrollAreaRef}
-                onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
+                data-lenis-prevent
             >
                 {/* Render projects + a clone of the first one for seamless loop */}
                 {[...projects, projects[0]].map((project, index) => (

@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { IoArrowBack, IoClose } from 'react-icons/io5';
 import './ArchitectureAllWork.css';
 
 import bg1 from '../../assets/hero_bg_night.png';
@@ -27,7 +25,6 @@ const allProjects = [
 ];
 
 const ArchitectureAllWork = () => {
-    const navigate = useNavigate();
     const containerRef = useRef(null);
     const timelines = useRef([]);
     const [selectedProject, setSelectedProject] = useState(null);
@@ -123,18 +120,6 @@ const ArchitectureAllWork = () => {
 
     const handleProjectClick = (project) => {
         setSelectedProject(project);
-    };
-
-    const handleCloseModal = () => {
-        const tl = gsap.timeline({
-            onComplete: () => setSelectedProject(null)
-        });
-        tl.to([modalImgRef.current, modalInfoRef.current], {
-            y: 50,
-            opacity: 0,
-            duration: 0.4,
-            ease: 'power2.in'
-        });
     };
 
     // Animate Modal In

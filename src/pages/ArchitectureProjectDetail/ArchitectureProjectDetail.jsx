@@ -57,6 +57,7 @@ const ArchitectureProjectDetail = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
 
+        const ctx = gsap.context(() => {
         const tl = gsap.timeline();
 
         tl.fromTo('.arch-detail-hero-content > *',
@@ -100,9 +101,9 @@ const ArchitectureProjectDetail = () => {
             }
         );
 
-        return () => {
-            ScrollTrigger.getAll().forEach(t => t.kill());
-        };
+        }, containerRef);
+
+        return () => ctx.revert();
     }, [id]);
 
     return (

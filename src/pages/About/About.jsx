@@ -40,36 +40,65 @@ const teamMembers = [
 ];
 
 const About = () => {
-    const [rotation, setRotation] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const containerRef = useRef(null);
     const requestRef = useRef();
+    const cardRefs = useRef([]);
+    const rotationRef = useRef(0);
+    const isPausedRef = useRef(false);
+    const activeIndexRef = useRef(0);
+    const applyRotationRef = useRef(() => {});
 
     const total = teamMembers.length;
     const angleStep = 360 / total;
 
-    // Calculate active index based on rotation
     useEffect(() => {
-        const normalizedRotation = ((-rotation % 360) + 360) % 360;
-        const index = Math.round(normalizedRotation / angleStep) % total;
-        if (index !== activeIndex) {
-            setActiveIndex(index);
-        }
-    }, [rotation, angleStep, total, activeIndex]);
+        const applyRotation = () => {
+            const rotation = rotationRef.current;
+            const normalizedRotation = ((-rotation % 360) + 360) % 360;
+            const index = Math.round(normalizedRotation / angleStep) % total;
 
-    // Auto-rotation logic
-    useEffect(() => {
+            if (index !== activeIndexRef.current) {
+                activeIndexRef.current = index;
+                setActiveIndex(index);
+            }
+
+            cardRefs.current.forEach((card, cardIndex) => {
+                if (!card) return;
+
+                const currentAngle = (angleStep * cardIndex + rotation) % 360;
+                const angleRad = (currentAngle * Math.PI) / 180;
+                const radiusX = 350;
+                const radiusZ = 400;
+                const x = Math.sin(angleRad) * radiusX;
+                const z = Math.cos(angleRad) * radiusZ;
+                const normalizedZ = (z + radiusZ) / (2 * radiusZ);
+
+                gsap.set(card, {
+                    x,
+                    z,
+                    scale: normalizedZ * 0.5 + 0.5,
+                    rotationY: -Math.sin(angleRad) * 30,
+                    zIndex: Math.round(z + radiusZ),
+                    opacity: normalizedZ * 0.8 + 0.2,
+                    filter: `blur(${(1 - normalizedZ) * 8}px)`,
+                });
+            });
+        };
+        applyRotationRef.current = applyRotation;
+
         const animate = () => {
-            if (!isPaused) {
-                setRotation(prev => prev - 0.2);
+            if (!isPausedRef.current) {
+                rotationRef.current -= 0.2;
+                applyRotation();
             }
             requestRef.current = requestAnimationFrame(animate);
         };
 
+        applyRotation();
         requestRef.current = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(requestRef.current);
-    }, [isPaused]);
+    }, [angleStep, total]);
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -111,37 +140,19 @@ const About = () => {
     }, [activeIndex]);
 
     const handleNext = () => {
-        setRotation(prev => prev - angleStep);
+        rotationRef.current -= angleStep;
+        const index = ((activeIndexRef.current + 1) % total);
+        activeIndexRef.current = index;
+        setActiveIndex(index);
+        applyRotationRef.current();
     };
 
     const handlePrev = () => {
-        setRotation(prev => prev + angleStep);
-    };
-
-    const getCardStyle = (index) => {
-        const currentAngle = (angleStep * index + rotation) % 360;
-        const angleRad = (currentAngle * Math.PI) / 180;
-
-        // Circular path parameters
-        const radiusX = 350;
-        const radiusZ = 400;
-
-        const x = Math.sin(angleRad) * radiusX;
-        const z = Math.cos(angleRad) * radiusZ;
-
-        const normalizedZ = (z + radiusZ) / (2 * radiusZ);
-        const scale = normalizedZ * 0.5 + 0.5;
-        const opacity = normalizedZ * 0.8 + 0.2;
-        const blur = (1 - normalizedZ) * 8;
-        const rotateY = -Math.sin(angleRad) * 30;
-
-        return {
-            transform: `translate3d(${x}px, 0, ${z}px) scale(${scale}) rotateY(${rotateY}deg)`,
-            zIndex: Math.round(z + radiusZ),
-            opacity: opacity,
-            filter: `blur(${blur}px)`,
-            transition: 'transform 0.1s linear, opacity 0.4s ease, filter 0.4s ease'
-        };
+        rotationRef.current += angleStep;
+        const index = (activeIndexRef.current - 1 + total) % total;
+        activeIndexRef.current = index;
+        setActiveIndex(index);
+        applyRotationRef.current();
     };
 
     const activeMember = teamMembers[activeIndex];
@@ -150,8 +161,8 @@ const About = () => {
         <div
             className="about-v2-container"
             ref={containerRef}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
+            onMouseEnter={() => { isPausedRef.current = true; }}
+            onMouseLeave={() => { isPausedRef.current = false; }}
         >
             <div className="about-v2-content">
                 {/* Left Side: Information */}
@@ -186,7 +197,7 @@ const About = () => {
                             <div
                                 key={member.id}
                                 className={`team-member-card-3d ${activeIndex === index ? 'active' : ''}`}
-                                style={getCardStyle(index)}
+                                ref={el => { cardRefs.current[index] = el; }}
                             >
                                 <div className="member-image-wrapper">
                                     <img src={member.image} alt={member.name} className="member-main-img" />
@@ -211,7 +222,10 @@ const About = () => {
                         className={`progress-dot ${i === activeIndex ? 'active' : ''}`}
                         onClick={() => {
                             const targetRotation = -i * angleStep;
-                            setRotation(targetRotation);
+                            rotationRef.current = targetRotation;
+                            activeIndexRef.current = i;
+                            setActiveIndex(i);
+                            applyRotationRef.current();
                         }}
                     >
                         <div className="progress-fill"></div>

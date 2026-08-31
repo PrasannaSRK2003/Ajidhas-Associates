@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { IoArrowBack } from 'react-icons/io5';
 import './Interior.css';
 
 import buildingNight from '../../assets/building_night.png';
@@ -37,18 +36,7 @@ const Interior = () => {
             .fromTo(nextTitleRef.current, { x: 50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8 }, '-=0.6');
     }, []);
 
-    // Auto-slide effect
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (!isAnimating) {
-                changeSlide();
-            }
-        }, 5000);
-
-        return () => clearTimeout(timer);
-    }, [currentIndex, isAnimating]);
-
-    const changeSlide = () => {
+    const changeSlide = useCallback(() => {
         if (isAnimating) return;
         setIsAnimating(true);
 
@@ -87,7 +75,14 @@ const Interior = () => {
                 // This is where we'd ideally swap the image source if we had different images
             }
         });
-    };
+    }, [currentIndex, isAnimating]);
+
+    // Auto-slide effect
+    useEffect(() => {
+        const timer = setTimeout(changeSlide, 5000);
+
+        return () => clearTimeout(timer);
+    }, [changeSlide]);
 
     return (
         <div className="interior-container">

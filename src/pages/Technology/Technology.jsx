@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
-import { IoArrowBack } from 'react-icons/io5';
 import './Technology.css';
 
 import buildingNight from '../../assets/villa_solenne.png';
@@ -64,7 +62,6 @@ const techItems = [
 ];
 
 const Technology = () => {
-    const navigate = useNavigate();
     const [isLoaded, setIsLoaded] = useState(false);
     const [hoveredItem, setHoveredItem] = useState(null);
     const marqueeRef = useRef(null);
@@ -131,10 +128,6 @@ const Technology = () => {
             }
         }
     }, [hoveredItem]);
-
-    const handleBack = () => {
-        navigate('/architecture');
-    };
 
     return (
         <div className="technology-page">

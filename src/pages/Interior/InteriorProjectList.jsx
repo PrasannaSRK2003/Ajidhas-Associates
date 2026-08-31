@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './InteriorProjectList.css';
 
@@ -21,10 +21,9 @@ const projects = [
 ];
 
 const InteriorProjectList = () => {
-    const navigate = useNavigate();
     const location = useLocation();
     const initialId = location.state?.selectedId || 5;
-    const [activeId, setActiveId] = useState(initialId);
+    const [activeId] = useState(initialId);
     const [introComplete, setIntroComplete] = useState(false);
     const imageRef = useRef(null);
     const introRef = useRef(null);
@@ -42,15 +41,6 @@ const InteriorProjectList = () => {
         projects[getWrappedIndex(activeIndex + 1)],
         projects[getWrappedIndex(activeIndex + 2)]
     ];
-
-    // Helper to split text for animation
-    const splitText = (text) => {
-        return text.split('').map((char, index) => (
-            <span key={index} className="works-char" style={{ display: 'inline-block' }}>
-                {char}
-            </span>
-        ));
-    };
 
     useEffect(() => {
         // Hide BG initially to show black background
@@ -124,19 +114,6 @@ const InteriorProjectList = () => {
             );
 
     }, []);
-
-    const handleProjectClick = (id) => {
-        if (id === activeId) return;
-
-        gsap.to(imageRef.current, {
-            opacity: 0,
-            duration: 0.3,
-            onComplete: () => {
-                setActiveId(id);
-                gsap.to(imageRef.current, { opacity: 1, duration: 0.5 });
-            }
-        });
-    };
 
     return (
         <div className="ipl-container">

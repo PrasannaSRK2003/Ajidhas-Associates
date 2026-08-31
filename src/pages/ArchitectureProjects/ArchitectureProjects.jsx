@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { IoArrowBack } from 'react-icons/io5';
 import './ArchitectureProjects.css';
 
 import arch1 from '../../assets/arch_project_1.png';
@@ -45,10 +43,10 @@ const projects = [
 ];
 
 const ArchitectureProjects = () => {
-    const navigate = useNavigate();
     const containerRef = useRef(null);
 
     useEffect(() => {
+        const ctx = gsap.context(() => {
         const sections = gsap.utils.toArray('.project-editorial-section');
 
         sections.forEach((section) => {
@@ -75,6 +73,10 @@ const ArchitectureProjects = () => {
                 .fromTo(meta, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1, stagger: 0.2 }, '-=0.6')
                 .fromTo(designer, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 1 }, '-=0.6');
         });
+
+        }, containerRef);
+
+        return () => ctx.revert();
     }, []);
 
     return (

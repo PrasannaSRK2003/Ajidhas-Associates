@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './Art.css';
@@ -50,8 +50,43 @@ const Art = () => {
     const [prevBg, setPrevBg] = useState(null);
     const [prevFading, setPrevFading] = useState(false);
     const [currentFading, setCurrentFading] = useState(true);
+    const currentBgRef = useRef(artPieces[0].image);
+    const fadeStartTimerRef = useRef();
+    const fadeCleanupTimerRef = useRef();
+
+    const changeBg = useCallback((image) => {
+        const previousImage = currentBgRef.current;
+        if (!image || image === previousImage) return;
+
+        document.body.classList.add('bg-transitioning');
+
+        const incoming = new Image();
+        incoming.src = image;
+        incoming.onload = () => {
+            currentBgRef.current = image;
+            setPrevBg(previousImage);
+            setPrevFading(false);
+            setCurrentFading(false);
+            setCurrentBg(image);
+
+            fadeStartTimerRef.current = window.setTimeout(() => {
+                setCurrentFading(true);
+                setPrevFading(true);
+            }, 40);
+
+            fadeCleanupTimerRef.current = window.setTimeout(() => {
+                setPrevBg(null);
+                setPrevFading(false);
+                document.body.classList.remove('bg-transitioning');
+            }, 1000);
+        };
+        incoming.onerror = () => {
+            document.body.classList.remove('bg-transitioning');
+        };
+    }, []);
 
     useEffect(() => {
+        const ctx = gsap.context(() => {
         // Preload all background images to avoid flicker/blank while swapping
         artPieces.forEach(p => {
             const img = new Image();
@@ -113,48 +148,16 @@ const Art = () => {
             });
         });
 
-        return () => {
-            ScrollTrigger.getAll().forEach(t => t.kill());
-        };
+        }, containerRef);
+
+        return () => ctx.revert();
+    }, [changeBg]);
+
+    useEffect(() => () => {
+        clearTimeout(fadeStartTimerRef.current);
+        clearTimeout(fadeCleanupTimerRef.current);
+        document.body.classList.remove('bg-transitioning');
     }, []);
-
-    const changeBg = (image) => {
-        if (!image || image === currentBg) return;
-
-        // Prevent scroll UI from appearing during the transition
-        document.body.classList.add('bg-transitioning');
-
-        // Preload the incoming image first to avoid blink/flash
-        const incoming = new Image();
-        incoming.src = image;
-        incoming.onload = () => {
-            // set previous so it can fade out above the new one
-            setPrevBg(currentBg);
-            setPrevFading(false);
-
-            // prepare the new current image hidden, then fade it in
-            setCurrentFading(false);
-            setCurrentBg(image);
-
-            // next tick: start both fade-in for current and fade-out for prev
-            setTimeout(() => {
-                setCurrentFading(true);
-                setPrevFading(true);
-            }, 40);
-
-            // cleanup the previous background after the transition completes
-            const cleanupMs = 1000; // should match CSS transition (~900ms)
-            setTimeout(() => {
-                setPrevBg(null);
-                setPrevFading(false);
-                document.body.classList.remove('bg-transitioning');
-            }, cleanupMs);
-        };
-        // In case image fails to load, still remove the transitioning lock after a timeout
-        incoming.onerror = () => {
-            document.body.classList.remove('bg-transitioning');
-        };
-    };
 
     return (
         <div className="art-page" ref={containerRef}>
