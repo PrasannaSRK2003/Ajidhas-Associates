@@ -3,7 +3,7 @@
     height: 100vh;
     position: relative;
     overflow: hidden;
-    background-color: #000;
+    background-color: var(--color-deep-surface);
     font-family: 'Inter', sans-serif;
 }
 
@@ -190,7 +190,7 @@
 
 .explore-btn:hover {
     background: #fff;
-    color: #000;
+    color: var(--color-black);
     border-color: #fff;
 }
 

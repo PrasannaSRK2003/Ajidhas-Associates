@@ -1,7 +1,7 @@
 .technology-page {
     width: 100%;
     height: 100vh;
-    background-color: #050505;
+    background-color: var(--color-deep-surface);
     color: #fff;
     position: relative;
     overflow: hidden;
@@ -29,7 +29,7 @@
 
 .tech-back-btn:hover {
     background: #fff;
-    color: #000;
+    color: var(--color-black);
     transform: scale(1.1) rotate(-90deg);
 }
 
@@ -44,7 +44,7 @@
     align-items: center;
     justify-content: center;
     z-index: 500;
-    background: #050505;
+    background: var(--color-deep-surface);
 }
 
 .initial-card {
@@ -134,7 +134,7 @@
     height: 100%;
     position: relative;
     overflow: hidden;
-    background: #111;
+    background: var(--color-surface-grey);
     transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

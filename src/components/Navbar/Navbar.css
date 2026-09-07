@@ -58,7 +58,7 @@
 
 .back-button:hover {
     background-color: #fff;
-    color: #000;
+    color: var(--color-black);
     transform: translateX(-5px);
 }
 

@@ -1,7 +1,7 @@
 .artist-page {
     width: 100%;
     min-height: 100vh;
-    background: #000000;
+    background: var(--color-deep-surface);
     color: #ffffff;
     padding: clamp(100px, 20vh, 200px) 0;
     overflow: hidden;

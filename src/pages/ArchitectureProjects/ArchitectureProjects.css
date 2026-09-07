@@ -1,6 +1,6 @@
 .arch-projects-editorial {
     width: 100%;
-    background: #000;
+    background: var(--color-deep-surface);
 }
 
 .project-editorial-section {

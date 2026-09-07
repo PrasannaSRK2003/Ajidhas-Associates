@@ -1,5 +1,5 @@
 :root {
-    --preview-bg: #000000;
+    --preview-bg: var(--color-deep-surface);
     --card-width: 260px;
     --card-height: 360px;
     --accent-color: #ffffff;
@@ -132,7 +132,7 @@
     border-radius: 4px;
     overflow: hidden;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
-    background: #0a0a0a;
+    background: var(--color-surface-grey);
     border: 1px solid rgba(255, 255, 255, 0.03);
 }
 

@@ -52,7 +52,7 @@
 .inquiry-form textarea { min-height:120px; resize:vertical; }
 
 .inquiry-actions { display:flex; gap:0.6rem; margin-top:0.6rem; }
-.inquiry-submit { background: #111; border:1px solid rgba(255,255,255,0.12); color:var(--color-white); padding:0.6rem 1rem; cursor:pointer; }
+.inquiry-submit { background: var(--color-surface-grey); border:1px solid rgba(255,255,255,0.12); color:var(--color-white); padding:0.6rem 1rem; cursor:pointer; }
 .inquiry-cancel { background: transparent; border:1px solid rgba(255,255,255,0.06); color:rgba(255,255,255,0.8); padding:0.6rem 1rem; cursor:pointer; }
 
 @media (max-width: 520px) {

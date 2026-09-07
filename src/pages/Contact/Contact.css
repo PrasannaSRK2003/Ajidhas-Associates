@@ -1,7 +1,7 @@
 .contact-page {
     width: 100%;
     min-height: 100vh;
-    background-color: #000;
+    background-color: var(--color-deep-surface);
     color: #fff;
     position: relative;
     overflow: hidden;
@@ -31,7 +31,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at center, transparent 0%, #000 100%);
+    background: radial-gradient(circle at center, transparent 0%, var(--color-deep-surface) 100%);
 }
 
 .contact-container {
@@ -160,7 +160,7 @@ a.info-value:hover {
 .submit-btn {
     margin-top: 20px;
     background: #fff;
-    color: #000;
+    color: var(--color-black);
     border: none;
     padding: 18px 40px;
     font-size: 0.9rem;

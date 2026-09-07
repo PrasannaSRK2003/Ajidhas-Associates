@@ -1,5 +1,5 @@
 .project-detail-page {
-    background-color: #000000;
+    background-color: var(--color-deep-surface);
     color: #ffffff;
     min-height: 100vh;
     padding-top: clamp(60px, 10vh, 100px);
@@ -139,7 +139,7 @@
 
 .contact-project-btn:hover {
     background: #fff;
-    color: #000;
+    color: var(--color-black);
     border-color: #fff;
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
@@ -150,7 +150,7 @@
     height: 30rem;
     width: 30rem;
     overflow: hidden;
-    background: #0a0a0a;
+    background: var(--color-surface-grey);
     border-radius: 2px;
     box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
 }
@@ -201,7 +201,7 @@
 
 .gallery-grid-item {
     overflow: hidden;
-    background: #0a0a0a;
+    background: var(--color-surface-grey);
     border-radius: 2px;
 }
 

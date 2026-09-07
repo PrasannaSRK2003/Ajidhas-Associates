@@ -1,6 +1,6 @@
 .arch-project-detail-container {
     width: 100%;
-    background: #000;
+    background: var(--color-deep-surface);
     color: #fff;
     min-height: 100vh;
 }
@@ -72,7 +72,7 @@
 /* Info Section */
 .arch-detail-info-section {
     padding: 120px clamp(20px, 10vw, 150px);
-    background: #050505;
+    background: var(--color-deep-surface);
 }
 
 .arch-detail-info-grid {
@@ -173,7 +173,7 @@
 .arch-detail-gallery-item {
     aspect-ratio: 4/5;
     overflow: hidden;
-    background: #111;
+    background: var(--color-surface-grey);
 }
 
 .arch-detail-gallery-item img {

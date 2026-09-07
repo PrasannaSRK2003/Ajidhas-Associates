@@ -1,6 +1,6 @@
 .collaboration-page {
     width: 100%;
-    background-color: #000;
+    background-color: var(--color-deep-surface);
     color: #fff;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
@@ -29,7 +29,7 @@
 
 .collab-back-btn:hover {
     background: #fff;
-    color: #000;
+    color: var(--color-black);
     transform: scale(1.1) rotate(-90deg);
 }
 

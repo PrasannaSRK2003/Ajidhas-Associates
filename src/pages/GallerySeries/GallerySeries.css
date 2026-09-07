@@ -1,5 +1,5 @@
 :root {
-    --gallery-bg: #000000;
+    --gallery-bg: var(--color-deep-surface);
     --card-width: 320px;
     --card-height: 480px;
     --card-gap: 80px;
@@ -108,7 +108,7 @@
     border-radius: 2px;
     overflow: hidden;
     box-shadow: 20px 20px 60px rgba(0, 0, 0, 0.8);
-    background: #0a0a0a;
+    background: var(--color-surface-grey);
 }
 
 .card-image-box img {
