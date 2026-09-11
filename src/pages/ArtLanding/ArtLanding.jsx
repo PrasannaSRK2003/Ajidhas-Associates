@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { IoArrowForward } from 'react-icons/io5';
+import { useContent } from '../../context/ContentContext';
 import './ArtLanding.css';
 
 import art1 from '../../assets/art_1.png';
 import art2 from '../../assets/art_2.png';
 import art3 from '../../assets/art_3.png';
 
-const recentWorks = [
+const defaultWorks = [
     {
         id: 1,
         title: 'Ethereal Silence',
@@ -37,6 +38,26 @@ const recentWorks = [
 
 const ArtLanding = () => {
     const navigate = useNavigate();
+    const { getText, getImage, wpContent } = useContent();
+
+    const headerLabel = getText('art', 'header_label', 'Art Collection');
+    const headerTitle = getText('art', 'header_title', 'Ajidhas & Associates');
+    const headerSubtitle = getText('art', 'header_subtitle', 'Curated works from visionary artists');
+
+    const recentWorks = (wpContent?.art?.items && Array.isArray(wpContent.art.items) && wpContent.art.items.length > 0)
+        ? wpContent.art.items.map((item, idx) => ({
+            id: idx + 1,
+            title: item.title || defaultWorks[idx]?.title || 'Art Piece',
+            artist: item.artist || defaultWorks[idx]?.artist || 'Ajidhas',
+            year: item.year || defaultWorks[idx]?.year || '2025',
+            medium: item.medium || defaultWorks[idx]?.medium || 'Mixed Media',
+            image: item.image || getImage('art', idx, defaultWorks[idx]?.image || art1)
+        }))
+        : defaultWorks.map((item, idx) => ({
+            ...item,
+            image: getImage('art', idx, item.image)
+        }));
+
     const [currentSlide, setCurrentSlide] = useState(0);
     const [autoPlay, setAutoPlay] = useState(true);
     const coverRef = useRef(null);
@@ -45,46 +66,49 @@ const ArtLanding = () => {
     useEffect(() => {
         const tl = gsap.timeline();
 
-        // Cover slide animation
-        tl.fromTo(
-            coverRef.current,
-            { scale: 1.1, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out' }
-        );
+        if (coverRef.current) {
+            tl.fromTo(
+                coverRef.current,
+                { scale: 1.1, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out' }
+            );
+        }
 
-        tl.fromTo(
-            contentRef.current.children,
-            { y: 80, opacity: 0 },
-            { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power3.out' },
-            '-=1'
-        );
+        if (contentRef.current && contentRef.current.children.length > 0) {
+            tl.fromTo(
+                contentRef.current.children,
+                { y: 80, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power3.out' },
+                '-=1'
+            );
+        }
     }, []);
 
     // Auto-play slider
     useEffect(() => {
-        if (!autoPlay) return;
+        if (!autoPlay || recentWorks.length === 0) return;
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % recentWorks.length);
         }, 4000);
         return () => clearInterval(interval);
-    }, [autoPlay]);
+    }, [autoPlay, recentWorks.length]);
 
-    const currentWork = recentWorks[currentSlide];
+    const currentWork = recentWorks[currentSlide] || recentWorks[0] || defaultWorks[0];
 
     return (
         <div className="art-landing-page-new">
             {/* Full-screen cover slide */}
             <div className="cover-slide" ref={coverRef}>
                 <div className="cover-background">
-                    <img src={currentWork.image} alt={currentWork.title} key={currentWork.id} />
+                    <img src={currentWork.image} alt={currentWork.title} key={currentWork.id || currentSlide} />
                     <div className="cover-overlay"></div>
                 </div>
 
                 <div className="cover-content" ref={contentRef}>
                     <div className="cover-header">
-                        <span className="cover-label">Art Collection</span>
-                        <h1 className="cover-title">Ajidhas & Associates</h1>
-                        <p className="cover-subtitle">Curated works from visionary artists</p>
+                        <span className="cover-label">{headerLabel}</span>
+                        <h1 className="cover-title">{headerTitle}</h1>
+                        <p className="cover-subtitle">{headerSubtitle}</p>
                     </div>
 
                     <div className="featured-work">

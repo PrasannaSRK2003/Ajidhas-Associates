@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './ArchitectureLanding.css';
 
 import bg1 from '../../assets/hero_bg_night.png';
 import bg2 from '../../assets/hero_bg_architecture.png';
 import bg3 from '../../assets/home_bg.png';
 
-const backgroundImages = [bg1, bg2, bg3];
+const defaultBackgroundImages = [bg1, bg2, bg3];
 
 const architectureOptions = [
     { id: 1, title: 'All Work', path: '/architecture/all-work', description: 'Complete portfolio' },
@@ -22,17 +23,25 @@ const architectureOptions = [
 ];
 
 const ArchitectureLanding = () => {
+    const { getText, getImage } = useContent();
     const [currentBg, setCurrentBg] = useState(0);
     const navigate = useNavigate();
     const headerRef = useRef(null);
     const gridRef = useRef(null);
+
+    const headerTitle = getText('architecture', 'header_title', 'Architecture');
+    const backgroundImages = [
+        getImage('architecture', 0, defaultBackgroundImages[0]),
+        getImage('architecture', 1, defaultBackgroundImages[1]),
+        getImage('architecture', 2, defaultBackgroundImages[2]),
+    ];
 
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentBg((prev) => (prev + 1) % backgroundImages.length);
         }, 5000);
         return () => clearInterval(interval);
-    }, []);
+    }, [backgroundImages.length]);
 
     useEffect(() => {
         const tl = gsap.timeline();
@@ -67,7 +76,7 @@ const ArchitectureLanding = () => {
 
             <div className="arch-content">
                 <div className="arch-header" ref={headerRef}>
-                    <h1>Architecture</h1>
+                    <h1>{headerTitle}</h1>
                    
                 </div>
 

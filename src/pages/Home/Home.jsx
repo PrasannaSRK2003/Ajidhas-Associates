@@ -1,17 +1,25 @@
 import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './Home.css';
-
 
 import waitingHall from '../../assets/waiting_hall.jpeg';
 import logoImg from '../../assets/logo.png';
 
 const Home = () => {
+    const { getText, getImage } = useContent();
     const textRef = useRef(null);
     const buttonsRef = useRef(null);
     const bgImageRef = useRef(null);
     const navigate = useNavigate();
+
+    const currentLogo = getImage('general', 'logo_url', logoImg);
+    const currentBg = getImage('home', 'bg_image', waitingHall);
+    const heroTitle = getText('home', 'hero_title', 'Ajidhas and Associates');
+    const heroSubtitle = getText('home', 'hero_subtitle', 'Architecture & Art Studio');
+    const artBtnText = getText('home', 'art_button_text', 'Art');
+    const archBtnText = getText('home', 'architecture_button_text', 'Architecture');
 
     useEffect(() => {
         const ctx = gsap.context(() => {
@@ -67,7 +75,6 @@ const Home = () => {
             const x = (clientX / window.innerWidth) - 0.5;
             const y = (clientY / window.innerHeight) - 0.5;
 
-            // Subtle rotation and positioning for elegance
             rotYTo(x * 10);
             rotXTo(-y * 10);
             xTo(x * 15);
@@ -94,7 +101,7 @@ const Home = () => {
             <div className="home-background">
                 <img
                     ref={bgImageRef}
-                    src={waitingHall}
+                    src={currentBg}
                     alt="Background"
                     className="bg-slide active"
                 />
@@ -103,18 +110,18 @@ const Home = () => {
 
             <section className="hero-section-new">
                 <div className="hero-content-new" ref={textRef}>
-                    <img src={logoImg} alt="Logo" className="hero-logo" />
-                    <h1>Ajidhas and Associates</h1>
-                    <p className="hero-subtitle">Architecture & Art Studio</p>
+                    <img src={currentLogo} alt="Logo" className="hero-logo" />
+                    <h1>{heroTitle}</h1>
+                    <p className="hero-subtitle">{heroSubtitle}</p>
                 </div>
 
                 <div className="hero-buttons" ref={buttonsRef}>
                     <button className="hero-btn" onClick={() => navigate('/art')}>
-                        <span className="btn-text">Art</span>
+                        <span className="btn-text">{artBtnText}</span>
                         <span className="btn-arrow">→</span>
                     </button>
                     <button className="hero-btn" onClick={() => navigate('/architecture')}>
-                        <span className="btn-text">Architecture</span>
+                        <span className="btn-text">{archBtnText}</span>
                         <span className="btn-arrow">→</span>
                     </button>
                 </div>

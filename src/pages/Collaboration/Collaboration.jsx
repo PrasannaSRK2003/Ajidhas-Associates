@@ -51,29 +51,67 @@ const Collaboration = () => {
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-        const sections = sectionsRef.current;
+            const sections = sectionsRef.current;
 
             sections.forEach((section) => {
-            if (!section) return;
+                if (!section) return;
 
-            const bgImg = section.querySelector('.collab-bg-image');
-            const bgOverlay = section.querySelector('.bg-overlay');
-            const titleChars = section.querySelectorAll('.title-char');
-            const subtitle = section.querySelector('.collab-hero-subtitle');
-            const desc = section.querySelector('.collab-hero-desc');
-            const label = section.querySelector('.collab-label-tag');
-            const contentLeft = section.querySelector('.content-left');
-            const contentRight = section.querySelector('.content-right');
+                const bgImg = section.querySelector('.collab-bg-image');
+                const bgOverlay = section.querySelector('.bg-overlay');
+                const titleChars = section.querySelectorAll('.title-char');
+                const subtitle = section.querySelector('.collab-hero-subtitle');
+                const desc = section.querySelector('.collab-hero-desc');
+                const label = section.querySelector('.collab-label-tag');
+                const contentLeft = section.querySelector('.content-left');
+                const contentRight = section.querySelector('.content-right');
 
-            // --- Advanced Image Scroll Animations ---
+                // --- Advanced Image Scroll Animations ---
 
-            // 1. Parallax + Zoom + Rotation
-            gsap.fromTo(bgImg,
-                { scale: 1.4, y: '-10%', rotation: 2 },
-                {
-                    scale: 1,
-                    y: '10%',
-                    rotation: -2,
+                // 1. Parallax + Zoom + Rotation
+                gsap.fromTo(bgImg,
+                    { scale: 1.4, y: '-10%', rotation: 2 },
+                    {
+                        scale: 1,
+                        y: '10%',
+                        rotation: -2,
+                        ease: 'none',
+                        scrollTrigger: {
+                            trigger: section,
+                            start: 'top bottom',
+                            end: 'bottom top',
+                            scrub: true
+                        }
+                    }
+                );
+
+                // 2. Dynamic Brightness/Filter on Scroll
+                gsap.fromTo(bgImg,
+                    { filter: 'brightness(0.3) contrast(1.2) saturate(0.8)' },
+                    {
+                        filter: 'brightness(0.6) contrast(1) saturate(1.1)',
+                        scrollTrigger: {
+                            trigger: section,
+                            start: 'top center',
+                            end: 'bottom center',
+                            scrub: true
+                        }
+                    }
+                );
+
+                // 3. Overlay Opacity Shift
+                gsap.to(bgOverlay, {
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)',
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top bottom',
+                        end: 'bottom top',
+                        scrub: true
+                    }
+                });
+
+                // --- Content Parallax ---
+                gsap.to(contentLeft, {
+                    y: '-60px',
                     ease: 'none',
                     scrollTrigger: {
                         trigger: section,
@@ -81,98 +119,60 @@ const Collaboration = () => {
                         end: 'bottom top',
                         scrub: true
                     }
-                }
-            );
+                });
 
-            // 2. Dynamic Brightness/Filter on Scroll
-            gsap.fromTo(bgImg,
-                { filter: 'brightness(0.3) contrast(1.2) saturate(0.8)' },
-                {
-                    filter: 'brightness(0.6) contrast(1) saturate(1.1)',
+                gsap.to(contentRight, {
+                    y: '-100px',
+                    ease: 'none',
                     scrollTrigger: {
                         trigger: section,
-                        start: 'top center',
-                        end: 'bottom center',
+                        start: 'top bottom',
+                        end: 'bottom top',
                         scrub: true
                     }
-                }
-            );
+                });
 
-            // 3. Overlay Opacity Shift
-            gsap.to(bgOverlay, {
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)',
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: true
-                }
-            });
+                // --- Text Entrance Timeline ---
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top 45%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
 
-            // --- Content Parallax ---
-            gsap.to(contentLeft, {
-                y: '-60px',
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: true
-                }
-            });
-
-            gsap.to(contentRight, {
-                y: '-100px',
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top bottom',
-                    end: 'bottom top',
-                    scrub: true
-                }
-            });
-
-            // --- Text Entrance Timeline ---
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top 45%',
-                    toggleActions: 'play none none reverse'
-                }
-            });
-
-            tl.fromTo(label,
-                { y: 30, opacity: 0, letterSpacing: '20px' },
-                { y: 0, opacity: 1, letterSpacing: '8px', duration: 1, ease: 'power4.out' }
-            )
-                .fromTo(titleChars,
-                    { y: 120, opacity: 0, rotateX: -100, transformOrigin: '50% 0%' },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        rotateX: 0,
-                        duration: 1.5,
-                        stagger: 0.04,
-                        ease: 'expo.out'
-                    },
-                    '-=0.7'
+                tl.fromTo(label,
+                    { y: 30, opacity: 0, letterSpacing: '20px' },
+                    { y: 0, opacity: 1, letterSpacing: '8px', duration: 1, ease: 'power4.out' }
                 )
-                .fromTo(subtitle,
-                    { x: -50, opacity: 0, filter: 'blur(10px)' },
-                    { x: 0, opacity: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' },
-                    '-=1'
-                )
-                .fromTo(desc,
-                    { y: 40, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out' },
-                    '-=1'
-                )
-                .fromTo(section.querySelector('.collab-more-btn'),
-                    { x: -30, opacity: 0 },
-                    { x: 0, opacity: 1, duration: 1, ease: 'power4.out' },
-                    '-=0.8'
-                );
-        });
+                    .fromTo(titleChars,
+                        { y: 120, opacity: 0, rotateX: -100, transformOrigin: '50% 0%' },
+                        {
+                            y: 0,
+                            opacity: 1,
+                            rotateX: 0,
+                            duration: 1.5,
+                            stagger: 0.04,
+                            ease: 'expo.out'
+                        },
+                        '-=0.7'
+                    )
+                    .fromTo(subtitle,
+                        { x: -50, opacity: 0, filter: 'blur(10px)' },
+                        { x: 0, opacity: 1, filter: 'blur(0px)', duration: 1.2, ease: 'power3.out' },
+                        '-=1'
+                    )
+                    .fromTo(desc,
+                        { y: 40, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out' },
+                        '-=1'
+                    )
+                    .fromTo(section.querySelector('.collab-more-btn'),
+                        { x: -30, opacity: 0 },
+                        { x: 0, opacity: 1, duration: 1, ease: 'power4.out' },
+                        '-=0.8'
+                    );
+            });
 
         }, containerRef);
 

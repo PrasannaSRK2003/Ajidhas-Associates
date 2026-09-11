@@ -131,7 +131,7 @@ const Technology = () => {
 
     return (
         <div className="technology-page">
-            
+
 
             {/* Initial Entrance Card */}
             {!isLoaded && (

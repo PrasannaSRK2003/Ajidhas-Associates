@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useContent } from '../../context/ContentContext';
 import './Visualisation.css';
 
 import buildingNight from '../../assets/building_night.png';
@@ -12,7 +13,7 @@ import art3 from '../../assets/art_3.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projects = [
+const defaultProjects = [
     {
         id: 1,
         title: 'Haus am See',
@@ -96,10 +97,11 @@ const projects = [
         category: 'CORPORATE',
         image: art3,
         description: 'An experimental research facility where architecture serves as a catalyst for scientific discovery.'
-    },
+    }
 ];
 
 const Visualisation = () => {
+    const { getImage, wpContent } = useContent();
     const scrollAreaRef = useRef(null);
     const projectRefs = useRef([]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -107,6 +109,19 @@ const Visualisation = () => {
     const activeIndexRef = useRef(0);
     const resumeTimerRef = useRef();
     const loopTimerRef = useRef();
+
+    const projects = (wpContent?.visualisation?.items && Array.isArray(wpContent.visualisation.items) && wpContent.visualisation.items.length > 0)
+        ? wpContent.visualisation.items.map((item, idx) => ({
+            id: idx + 1,
+            title: item.title || defaultProjects[idx]?.title || 'Render Project',
+            category: (item.category || defaultProjects[idx]?.category || 'VISUALISATION').toUpperCase(),
+            image: item.image || getImage('visualisation', idx, defaultProjects[idx]?.image || art3),
+            description: item.description || defaultProjects[idx]?.description || '3D Render & architectural visualisation.'
+        }))
+        : defaultProjects.map((item, idx) => ({
+            ...item,
+            image: getImage('visualisation', idx, item.image)
+        }));
 
     const setPaused = useCallback((paused) => {
         isPausedRef.current = paused;
@@ -123,9 +138,9 @@ const Visualisation = () => {
             activeIndexRef.current = index % projects.length;
             setActiveIndex(activeIndexRef.current);
         }
-    }, []);
+    }, [projects.length]);
 
-    // Auto-scrolling logic - Snap to next every 5 seconds
+    // Auto-scrolling logic
     useEffect(() => {
         const scrollArea = scrollAreaRef.current;
         if (!scrollArea) return;
@@ -137,7 +152,7 @@ const Visualisation = () => {
             if (nextIndex >= projects.length) {
                 scrollToIndex(nextIndex);
                 loopTimerRef.current = window.setTimeout(() => {
-                    scrollArea.scrollTo({ top: 0, behavior: 'auto' });
+                    if (scrollArea) scrollArea.scrollTo({ top: 0, behavior: 'auto' });
                     activeIndexRef.current = 0;
                     setActiveIndex(0);
                 }, 800);
@@ -148,7 +163,6 @@ const Visualisation = () => {
 
         const intervalId = window.setInterval(advance, 5000);
 
-        // Drag to scroll variables
         let isDragging = false;
         let startY;
         let scrollTop;
@@ -172,7 +186,6 @@ const Visualisation = () => {
             scrollArea.classList.remove('grabbing');
             setPaused(false);
 
-            // Snap to nearest section after drag
             const newIndex = Math.round(scrollArea.scrollTop / window.innerHeight);
             scrollToIndex(newIndex);
         };
@@ -194,13 +207,11 @@ const Visualisation = () => {
         };
 
         const handleScroll = () => {
-            const scrollArea = scrollAreaRef.current;
             if (!scrollArea) return;
 
             const scrollPos = scrollArea.scrollTop;
             const totalHeight = projects.length * window.innerHeight;
 
-            // Seamless loop jump
             if (scrollPos >= totalHeight) {
                 scrollArea.scrollTo({ top: 0, behavior: 'auto' });
                 activeIndexRef.current = 0;
@@ -233,108 +244,100 @@ const Visualisation = () => {
             clearTimeout(resumeTimerRef.current);
             clearTimeout(loopTimerRef.current);
         };
-    }, [scrollToIndex, setPaused]);
+    }, [projects.length, scrollToIndex, setPaused]);
 
+    // GSAP ScrollTrigger Animations with Null Safety
     useEffect(() => {
+        const scrollArea = scrollAreaRef.current;
+        if (!scrollArea) return;
+
         const ctx = gsap.context(() => {
-        const sections = gsap.utils.toArray('.vis-story-section');
+            const sections = gsap.utils.toArray('.vis-story-section');
 
-        sections.forEach((section) => {
-            const imageContainer = section.querySelector('.vis-story-image');
-            const image = section.querySelector('.vis-story-image img');
-            const content = section.querySelector('.vis-story-content');
-            const title = section.querySelector('.vis-story-title');
-            const desc = section.querySelector('.vis-story-desc');
-            const cat = section.querySelector('.vis-story-cat');
+            sections.forEach((section) => {
+                if (!section) return;
 
-            // 3D Cinematic Image Animation
-            gsap.fromTo(imageContainer,
-                {
-                    rotationX: 45,
-                    z: -500,
-                    opacity: 0,
-                    transformOrigin: "center bottom"
-                },
-                {
-                    rotationX: 0,
-                    z: 0,
-                    opacity: 1,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: section,
-                        start: "top bottom",
-                        end: "top center",
-                        scrub: true,
-                        scroller: ".vis-scroll-area"
-                    }
+                const imageContainer = section.querySelector('.vis-story-image');
+                const image = section.querySelector('.vis-story-image img');
+                const content = section.querySelector('.vis-story-content');
+                const title = section.querySelector('.vis-story-title');
+                const desc = section.querySelector('.vis-story-desc');
+                const cat = section.querySelector('.vis-story-cat');
+
+                if (imageContainer) {
+                    gsap.fromTo(imageContainer,
+                        { rotationX: 30, z: -300, opacity: 0.2 },
+                        {
+                            rotationX: 0, z: 0, opacity: 1,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: section,
+                                start: "top bottom",
+                                end: "top center",
+                                scrub: true,
+                                scroller: scrollArea
+                            }
+                        }
+                    );
                 }
-            );
 
-            gsap.to(imageContainer, {
-                rotationX: -45,
-                z: -500,
-                opacity: 0,
-                transformOrigin: "center top",
-                ease: "power2.in",
-                scrollTrigger: {
-                    trigger: section,
-                    start: "bottom center",
-                    end: "bottom top",
-                    scrub: true,
-                    scroller: ".vis-scroll-area"
+                if (image) {
+                    gsap.fromTo(image,
+                        { scale: 1.3 },
+                        {
+                            scale: 1,
+                            duration: 1.8,
+                            ease: "expo.out",
+                            scrollTrigger: {
+                                trigger: section,
+                                start: "top 85%",
+                                toggleActions: "play none none reverse",
+                                scroller: scrollArea
+                            }
+                        }
+                    );
                 }
-            });
 
-            // Inner Image Parallax & Scale
-            gsap.fromTo(image,
-                { scale: 1.5 },
-                {
-                    scale: 1,
-                    duration: 2,
-                    ease: "expo.out",
-                    scrollTrigger: {
-                        trigger: section,
-                        start: "top 80%",
-                        toggleActions: "play none none reverse",
-                        scroller: ".vis-scroll-area"
-                    }
+                if (content) {
+                    gsap.fromTo(content,
+                        { y: 40, opacity: 0 },
+                        {
+                            y: 0, opacity: 1,
+                            duration: 1.2,
+                            ease: "power3.out",
+                            scrollTrigger: {
+                                trigger: section,
+                                start: "top 75%",
+                                toggleActions: "play none none reverse",
+                                scroller: scrollArea
+                            }
+                        }
+                    );
                 }
-            );
 
-            // 3D Content Animation
-            gsap.fromTo(content,
-                { rotationX: 20, z: -200, opacity: 0 },
-                {
-                    rotationX: 0, z: 0, opacity: 1,
-                    duration: 1.5,
-                    ease: "power3.out",
-                    scrollTrigger: {
-                        trigger: section,
-                        start: "top 70%",
-                        toggleActions: "play none none reverse",
-                        scroller: ".vis-scroll-area"
-                    }
-                }
-            );
-
-            // Text Entrance Animations
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: section,
-                    start: "top 60%",
-                    toggleActions: "play none none reverse",
-                    scroller: ".vis-scroll-area"
+                const textTargets = [cat, title, desc].filter(Boolean);
+                if (textTargets.length > 0) {
+                    gsap.fromTo(textTargets,
+                        { opacity: 0, y: 20 },
+                        {
+                            opacity: 1, y: 0,
+                            duration: 0.8,
+                            stagger: 0.1,
+                            ease: 'power3.out',
+                            scrollTrigger: {
+                                trigger: section,
+                                start: "top 65%",
+                                toggleActions: "play none none reverse",
+                                scroller: scrollArea
+                            }
+                        }
+                    );
                 }
             });
-
-            tl.fromTo(cat, { opacity: 0, y: 20, filter: "blur(5px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6 })
-                .fromTo(title, { opacity: 0, y: 30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8 }, "-=0.4")
-                .fromTo(desc, { opacity: 0, y: 20, filter: "blur(5px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6 }, "-=0.4");
-        });
         }, scrollAreaRef);
 
         return () => ctx.revert();
-    }, []);
+    }, [projects]);
 
     return (
         <div className="vis-story-container">
@@ -370,10 +373,8 @@ const Visualisation = () => {
                 ))}
             </div>
 
-            {/* Fixed Navigation/Logo Overlay */}
+            {/* Fixed Navigation Overlay */}
             <div className="vis-story-fixed">
-
-
                 <div className="vis-story-nav">
                     {projects.map((_, i) => (
                         <button
@@ -386,8 +387,6 @@ const Visualisation = () => {
                         </button>
                     ))}
                 </div>
-
-
             </div>
         </div>
     );

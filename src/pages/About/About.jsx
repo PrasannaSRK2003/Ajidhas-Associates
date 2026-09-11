@@ -8,7 +8,9 @@ import team2 from '../../assets/team_2.png';
 import team3 from '../../assets/team_3.png';
 import team4 from '../../assets/team_4.png';
 
-const teamMembers = [
+import { useContent } from '../../context/ContentContext';
+
+const defaultTeamMembers = [
     {
         id: 1,
         name: "Ajidhas",
@@ -40,28 +42,32 @@ const teamMembers = [
 ];
 
 const About = () => {
+    const { getTeam, getText } = useContent();
+    const teamMembers = getTeam ? getTeam(defaultTeamMembers) : defaultTeamMembers;
+    const studioDesc = getText ? getText('about', 'studio_description', 'A collective of visionary architects, designers, and artists crafting timeless environments.') : 'A collective of visionary architects, designers, and artists crafting timeless environments.';
+
     const [activeIndex, setActiveIndex] = useState(0);
+    const activeIndexRef = useRef(0);
     const containerRef = useRef(null);
-    const requestRef = useRef();
     const cardRefs = useRef([]);
     const rotationRef = useRef(0);
     const isPausedRef = useRef(false);
-    const activeIndexRef = useRef(0);
-    const applyRotationRef = useRef(() => {});
+    const requestRef = useRef();
 
-    const total = teamMembers.length;
-    const angleStep = 360 / total;
+    const teamMembersList = Array.isArray(teamMembers) && teamMembers.length > 0 ? teamMembers : defaultTeamMembers;
+    const total = teamMembersList.length;
+    const angleStep = 360 / (total || 1);
+
+    const activeMember = teamMembersList[activeIndex] || teamMembersList[0] || defaultTeamMembers[0];
+    const firstName = (activeMember?.name || 'Ajidhas').split(' ')[0];
 
     useEffect(() => {
         const applyRotation = () => {
             const rotation = rotationRef.current;
-            const normalizedRotation = ((-rotation % 360) + 360) % 360;
-            const index = Math.round(normalizedRotation / angleStep) % total;
+            if (!cardRefs.current) return;
 
-            if (index !== activeIndexRef.current) {
-                activeIndexRef.current = index;
-                setActiveIndex(index);
-            }
+            let maxZ = -Infinity;
+            let frontCardIndex = 0;
 
             cardRefs.current.forEach((card, cardIndex) => {
                 if (!card) return;
@@ -74,65 +80,75 @@ const About = () => {
                 const z = Math.cos(angleRad) * radiusZ;
                 const normalizedZ = (z + radiusZ) / (2 * radiusZ);
 
-                gsap.set(card, {
-                    x,
-                    z,
-                    scale: normalizedZ * 0.5 + 0.5,
-                    rotationY: -Math.sin(angleRad) * 30,
-                    zIndex: Math.round(z + radiusZ),
-                    opacity: normalizedZ * 0.8 + 0.2,
-                    filter: `blur(${(1 - normalizedZ) * 8}px)`,
-                });
+                if (z > maxZ) {
+                    maxZ = z;
+                    frontCardIndex = cardIndex;
+                }
+
+                try {
+                    gsap.set(card, {
+                        x,
+                        z,
+                        scale: normalizedZ * 0.5 + 0.5,
+                        rotationY: -Math.sin(angleRad) * 30,
+                        zIndex: Math.round(z + radiusZ),
+                        opacity: normalizedZ * 0.8 + 0.2,
+                        filter: `blur(${(1 - normalizedZ) * 8}px)`,
+                    });
+                } catch (e) {
+                    // ignore
+                }
             });
+
+            if (frontCardIndex !== activeIndexRef.current) {
+                activeIndexRef.current = frontCardIndex;
+                setActiveIndex(frontCardIndex);
+            }
         };
-        applyRotationRef.current = applyRotation;
 
         const animate = () => {
             if (!isPausedRef.current) {
-                rotationRef.current -= 0.2;
-                applyRotation();
+                rotationRef.current -= 0.15;
             }
+            applyRotation();
             requestRef.current = requestAnimationFrame(animate);
         };
 
         applyRotation();
         requestRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(requestRef.current);
+        return () => {
+            if (requestRef.current) cancelAnimationFrame(requestRef.current);
+        };
     }, [angleStep, total]);
 
+    // Entrance animation
     useEffect(() => {
+        if (!containerRef.current) return;
         const ctx = gsap.context(() => {
-            // Initial Entrance
-            gsap.from(".about-v2-left", { x: -50, opacity: 0, duration: 1.5, ease: "expo.out" });
-            gsap.from(".about-v2-right", { x: 50, opacity: 0, duration: 1.5, ease: "expo.out" });
+            gsap.fromTo(".about-v2-left", 
+                { x: -30, opacity: 0 }, 
+                { x: 0, opacity: 1, duration: 1, ease: "power3.out" }
+            );
+            gsap.fromTo(".about-v2-right", 
+                { x: 30, opacity: 0 }, 
+                { x: 0, opacity: 1, duration: 1, ease: "power3.out" }
+            );
         }, containerRef);
 
         return () => ctx.revert();
     }, []);
 
+    // Text transition animation on active member change
     useEffect(() => {
+        if (!containerRef.current) return;
         const ctx = gsap.context(() => {
-            // Professional Text Fade-in with Blur
-            gsap.fromTo(".member-info-content > *",
-                {
-                    y: 20,
-                    opacity: 0,
-                    filter: "blur(10px)"
-                },
-                {
-                    y: 0,
-                    opacity: 1,
-                    filter: "blur(0px)",
-                    duration: 1.2,
-                    stagger: 0.15,
-                    ease: "power4.out"
-                }
+            gsap.fromTo(".member-info-content",
+                { opacity: 0.3, y: 10, filter: 'blur(4px)' },
+                { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.5, ease: 'power2.out' }
             );
-
-            // Background Text Animation
             gsap.fromTo(".bg-text-overlay span",
-                { x: 100, rotationY: 15, opacity: 0 },
-                { x: 0, rotationY: 0, opacity: 0.03, duration: 2, ease: "power3.out" }
+                { opacity: 0, scale: 0.9 },
+                { opacity: 0.03, scale: 1, duration: 0.6, ease: 'power2.out' }
             );
         }, containerRef);
 
@@ -141,21 +157,11 @@ const About = () => {
 
     const handleNext = () => {
         rotationRef.current -= angleStep;
-        const index = ((activeIndexRef.current + 1) % total);
-        activeIndexRef.current = index;
-        setActiveIndex(index);
-        applyRotationRef.current();
     };
 
     const handlePrev = () => {
         rotationRef.current += angleStep;
-        const index = (activeIndexRef.current - 1 + total) % total;
-        activeIndexRef.current = index;
-        setActiveIndex(index);
-        applyRotationRef.current();
     };
-
-    const activeMember = teamMembers[activeIndex];
 
     return (
         <div
@@ -165,67 +171,69 @@ const About = () => {
             onMouseLeave={() => { isPausedRef.current = false; }}
         >
             <div className="about-v2-content">
-                {/* Left Side: Information */}
+                {/* Left Side: Dynamic Details synchronized with front 3D card */}
                 <div className="about-v2-left">
-                    <div className="member-info-content" key={activeMember.id}>
-                        <span className="member-role-tag">{activeMember.role}</span>
-                        <h1 className="member-name-title">{activeMember.name}</h1>
+                    <div className="member-info-content">
+                        <span className="member-role-tag">{activeMember?.role || 'Architect'}</span>
+                        <h1 className="member-name-title">{activeMember?.name || 'Team Member'}</h1>
                         <div className="member-bio-container">
-                            <p className="member-bio-text">{activeMember.bio}</p>
+                            <p className="member-bio-text">{activeMember?.bio || studioDesc}</p>
                         </div>
 
                         <div className="member-nav-controls">
-                            <button className="nav-btn prev" onClick={handlePrev}>
+                            <button className="nav-btn prev" onClick={handlePrev} aria-label="Previous Team Member">
                                 <IoChevronBackOutline />
                             </button>
                             <div className="nav-counter">
                                 <span className="current">{(activeIndex + 1).toString().padStart(2, '0')}</span>
                                 <span className="separator">/</span>
-                                <span className="total">{teamMembers.length.toString().padStart(2, '0')}</span>
+                                <span className="total">{total.toString().padStart(2, '0')}</span>
                             </div>
-                            <button className="nav-btn next" onClick={handleNext}>
+                            <button className="nav-btn next" onClick={handleNext} aria-label="Next Team Member">
                                 <IoChevronForwardOutline />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Side: Circular Image Rotation */}
+                {/* Right Side: 3D Ring with 3D Position Sync */}
                 <div className="about-v2-right">
                     <div className="team-circular-ring">
-                        {teamMembers.map((member, index) => (
-                            <div
-                                key={member.id}
-                                className={`team-member-card-3d ${activeIndex === index ? 'active' : ''}`}
-                                ref={el => { cardRefs.current[index] = el; }}
-                            >
-                                <div className="member-image-wrapper">
-                                    <img src={member.image} alt={member.name} className="member-main-img" />
-                                    <div className="image-overlay-gradient"></div>
+                        {teamMembersList.map((member, index) => {
+                            const memberImg = member.image || defaultTeamMembers[index]?.image || team1;
+                            return (
+                                <div
+                                    key={member.id || index}
+                                    className={`team-member-card-3d ${activeIndex === index ? 'active' : ''}`}
+                                    ref={el => { cardRefs.current[index] = el; }}
+                                    onClick={() => {
+                                        rotationRef.current = -index * angleStep;
+                                    }}
+                                >
+                                    <div className="member-image-wrapper">
+                                        <img src={memberImg} alt={member.name || 'Team'} className="member-main-img" />
+                                        <div className="image-overlay-gradient"></div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
-                    {/* Background Decorative Text */}
+                    {/* Background Decorative Text Watermark */}
                     <div className="bg-text-overlay">
-                        <span>{activeMember.name.split(' ')[0]}</span>
+                        <span>{firstName}</span>
                     </div>
                 </div>
             </div>
 
-            {/* Bottom Progress Bar */}
+            {/* Bottom Progress Bar Sync */}
             <div className="about-progress-container">
-                {teamMembers.map((_, i) => (
+                {teamMembersList.map((_, i) => (
                     <div
                         key={i}
                         className={`progress-dot ${i === activeIndex ? 'active' : ''}`}
                         onClick={() => {
-                            const targetRotation = -i * angleStep;
-                            rotationRef.current = targetRotation;
-                            activeIndexRef.current = i;
-                            setActiveIndex(i);
-                            applyRotationRef.current();
+                            rotationRef.current = -i * angleStep;
                         }}
                     >
                         <div className="progress-fill"></div>

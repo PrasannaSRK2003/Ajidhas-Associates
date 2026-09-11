@@ -111,7 +111,7 @@ const Landscape = () => {
 
             <div className="land-center-content">
                 <h1 className="land-title">Landscape</h1>
-                
+
             </div>
 
             <div className="land-marquee-wrapper">

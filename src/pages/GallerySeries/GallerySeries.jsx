@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoArrowBack } from 'react-icons/io5';
+import { useContent } from '../../context/ContentContext';
 import './GallerySeries.css';
 
 import art1 from '../../assets/art_1.png';
 import art2 from '../../assets/art_2.png';
 import art3 from '../../assets/art_3.png';
 
-const galleryImages = [
+const defaultGalleryImages = [
     { id: 1, title: 'Hatha Yoga', label: 'Series 01', image: art1 },
     { id: 2, title: 'Vinyasa Yoga', label: 'Series 02', image: art2 },
     { id: 3, title: 'Ashtanga Yoga', label: 'Series 03', image: art3 },
@@ -18,17 +18,34 @@ const galleryImages = [
 
 const GallerySeries = () => {
     const navigate = useNavigate();
+    const { getText, getImage, wpContent } = useContent();
     const [isPaused, setIsPaused] = useState(false);
 
-    // Duplicate images for seamless loop
+    const headerLabel = getText('gallery', 'header_label', 'Gallery');
+    const headerTitle = getText('gallery', 'header_title', 'Artistic Series');
+    const footerHint = getText('gallery', 'footer_hint', 'Scroll to explore');
+
+    const galleryImages = (wpContent?.gallery?.items && Array.isArray(wpContent.gallery.items) && wpContent.gallery.items.length > 0)
+        ? wpContent.gallery.items.map((item, idx) => ({
+            id: idx + 1,
+            title: item.title || defaultGalleryImages[idx]?.title || `Series ${idx + 1}`,
+            label: item.label || defaultGalleryImages[idx]?.label || `Series ${(idx + 1).toString().padStart(2, '0')}`,
+            image: item.image || getImage('gallery', idx, defaultGalleryImages[idx]?.image || art1)
+        }))
+        : defaultGalleryImages.map((item, idx) => ({
+            ...item,
+            image: getImage('gallery', idx, item.image)
+        }));
+
+    // Duplicate images for seamless infinite 3D loop track
     const displayImages = [...galleryImages, ...galleryImages];
 
     return (
         <div className="gallery-page-container">
             <header className="gallery-header">
                 <div className="header-text">
-                    <span className="header-label">Gallery</span>
-                    <h1 className="header-title">Artistic Series</h1>
+                    <span className="header-label">{headerLabel}</span>
+                    <h1 className="header-title">{headerTitle}</h1>
                 </div>
             </header>
 
@@ -62,7 +79,7 @@ const GallerySeries = () => {
             <div className="gallery-footer">
                 <div className="scroll-indicator">
                     <div className="indicator-line"></div>
-                    <span>Scroll to explore</span>
+                    <span>{footerHint}</span>
                 </div>
             </div>
         </div>

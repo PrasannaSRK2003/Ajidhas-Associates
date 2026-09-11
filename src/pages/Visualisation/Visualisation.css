@@ -1,7 +1,7 @@
 .vis-story-container {
     width: 100%;
     height: 100vh;
-    background-color: var(--color-deep-surface);
+    background-color: #0b0c10;
     color: #fff;
     overflow: hidden;
     position: relative;
@@ -55,10 +55,9 @@
 
 .vis-story-image img {
     width: 100%;
-    height: 120%;
-    /* For parallax */
+    height: 100%;
     object-fit: cover;
-    opacity: 0.6;
+    opacity: 0.75;
     will-change: transform;
 }
 
@@ -68,7 +67,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.75) 100%);
     z-index: 2;
 }
 
@@ -85,27 +84,28 @@
     font-size: 0.75rem;
     letter-spacing: 6px;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 20px;
     display: block;
 }
 
 .vis-story-title {
-    font-size: clamp(3rem, 10vw, 7rem);
+    font-size: clamp(3rem, 8vw, 6.5rem);
     font-family: 'Cormorant Garamond', serif;
     font-weight: 300;
-    margin-bottom: 30px;
-    line-height: 1;
-    letter-spacing: -2px;
+    margin-bottom: 25px;
+    line-height: 1.05;
+    color: #ffffff;
+    letter-spacing: -1px;
 }
 
 .vis-story-desc {
     font-size: 1.1rem;
     line-height: 1.8;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.8);
     font-weight: 300;
-    max-width: 600px;
-    margin: 0 auto 40px;
+    max-width: 620px;
+    margin: 0 auto 35px;
 }
 
 .vis-story-footer {
@@ -119,6 +119,7 @@
     font-size: 0.9rem;
     letter-spacing: 4px;
     font-weight: 600;
+    color: #ffffff;
 }
 
 .vis-story-line {
@@ -136,42 +137,35 @@
     height: 100%;
     pointer-events: none;
     z-index: 100;
-    padding: 60px 80px;
+    padding: 60px 40px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-}
-
-.vis-story-logo {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 4px;
-    color: rgba(255, 255, 255, 0.4);
+    justify-content: center;
 }
 
 .vis-story-nav {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     pointer-events: all;
 }
 
 .vis-nav-dot {
     background: none;
     border: none;
-    padding: 10px;
+    padding: 6px 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     transition: all 0.3s ease;
 }
 
 .dot-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 2px;
-    color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
 }
 
@@ -179,76 +173,32 @@
     content: '';
     width: 6px;
     height: 6px;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     transition: all 0.3s ease;
 }
 
 .vis-nav-dot:hover .dot-label,
 .vis-nav-dot.active .dot-label {
-    color: #fff;
+    color: #ffffff;
 }
 
 .vis-nav-dot:hover::after,
 .vis-nav-dot.active::after {
-    background-color: #fff;
-    transform: scale(1.5);
-}
-
-.vis-story-scroll-hint {
-    align-self: flex-end;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-}
-
-.vis-story-scroll-hint span {
-    font-size: 0.6rem;
-    letter-spacing: 3px;
-    color: rgba(255, 255, 255, 0.4);
-    writing-mode: vertical-rl;
-}
-
-.hint-line {
-    width: 1px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.2);
-    position: relative;
-    overflow: hidden;
-}
-
-.hint-line::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #fff;
-    animation: scrollHint 2s infinite;
-}
-
-@keyframes scrollHint {
-    0% {
-        transform: translateY(-100%);
-    }
-
-    100% {
-        transform: translateY(100%);
-    }
+    background-color: #ffffff;
+    transform: scale(1.6);
 }
 
 @media (max-width: 768px) {
     .vis-story-fixed {
-        padding: 40px;
+        padding: 20px;
     }
 
     .vis-story-title {
-        font-size: 3.5rem;
+        font-size: 3rem;
     }
 
     .vis-story-desc {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
 }
