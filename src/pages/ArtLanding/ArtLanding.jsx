@@ -46,12 +46,12 @@ const ArtLanding = () => {
 
     const recentWorks = (wpContent?.art?.items && Array.isArray(wpContent.art.items) && wpContent.art.items.length > 0)
         ? wpContent.art.items.map((item, idx) => ({
-            id: idx + 1,
-            title: item.title || defaultWorks[idx]?.title || 'Art Piece',
-            artist: item.artist || defaultWorks[idx]?.artist || 'Ajidhas',
-            year: item.year || defaultWorks[idx]?.year || '2025',
-            medium: item.medium || defaultWorks[idx]?.medium || 'Mixed Media',
-            image: item.image || getImage('art', idx, defaultWorks[idx]?.image || art1)
+            id: item.id || idx + 1,
+            title: item.title || defaultWorks[idx % defaultWorks.length]?.title || 'Art Piece',
+            artist: item.artist || defaultWorks[idx % defaultWorks.length]?.artist || 'Ajidhas',
+            year: item.year || defaultWorks[idx % defaultWorks.length]?.year || '2025',
+            medium: item.medium || defaultWorks[idx % defaultWorks.length]?.medium || 'Mixed Media',
+            image: item.image || getImage('art', idx, defaultWorks[idx % defaultWorks.length]?.image || art1)
         }))
         : defaultWorks.map((item, idx) => ({
             ...item,
@@ -62,6 +62,13 @@ const ArtLanding = () => {
     const [autoPlay, setAutoPlay] = useState(true);
     const coverRef = useRef(null);
     const contentRef = useRef(null);
+
+    // Safeguard slide index against dynamic CRUD updates from WP CRM
+    useEffect(() => {
+        if (currentSlide >= recentWorks.length && recentWorks.length > 0) {
+            setCurrentSlide(0);
+        }
+    }, [recentWorks.length, currentSlide]);
 
     useEffect(() => {
         const tl = gsap.timeline();
@@ -93,7 +100,8 @@ const ArtLanding = () => {
         return () => clearInterval(interval);
     }, [autoPlay, recentWorks.length]);
 
-    const currentWork = recentWorks[currentSlide] || recentWorks[0] || defaultWorks[0];
+    const activeIndex = currentSlide < recentWorks.length ? currentSlide : 0;
+    const currentWork = recentWorks[activeIndex] || recentWorks[0] || defaultWorks[0];
 
     return (
         <div className="art-landing-page-new">

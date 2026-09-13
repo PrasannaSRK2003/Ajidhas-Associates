@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './Interior.css';
 
 import buildingNight from '../../assets/building_night.png';
@@ -8,7 +9,7 @@ import villaLumiere from '../../assets/villa_lumiere.png';
 import villaSolenne from '../../assets/villa_solenne.png';
 import archProject1 from '../../assets/arch_project_1.png';
 
-const interiors = [
+const defaultInteriors = [
     { id: 1, title: 'Go-to-urban', subtitle: 'Descubre la colección Evo', image: villaLumiere },
     { id: 2, title: 'Sublime', subtitle: 'Elegance in every detail', image: villaSolenne },
     { id: 3, title: 'Urban Echo', subtitle: 'Modern living spaces', image: archProject1 },
@@ -20,12 +21,25 @@ const Interior = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [nextIndex, setNextIndex] = useState(1);
     const [isAnimating, setIsAnimating] = useState(false);
+    const { getImage, wpContent } = useContent();
 
     const titleRef = useRef(null);
     const subtitleRef = useRef(null);
     const counterRef = useRef(null);
     const bgRef = useRef(null);
     const nextTitleRef = useRef(null);
+
+    const interiors = (wpContent?.interior?.items && Array.isArray(wpContent.interior.items) && wpContent.interior.items.length > 0)
+        ? wpContent.interior.items.map((item, idx) => ({
+            id: item.id || idx + 1,
+            title: item.title || defaultInteriors[idx % defaultInteriors.length]?.title || `Interior ${idx + 1}`,
+            subtitle: item.subtitle || defaultInteriors[idx % defaultInteriors.length]?.subtitle || 'Curated Design',
+            image: item.image || getImage('interior', `slide_${idx}`, defaultInteriors[idx % defaultInteriors.length]?.image || villaLumiere)
+        }))
+        : defaultInteriors.map((item, idx) => ({
+            ...item,
+            image: getImage('interior', `slide_${idx}`, item.image)
+        }));
 
     useEffect(() => {
         // Initial animation
@@ -37,7 +51,7 @@ const Interior = () => {
     }, []);
 
     const changeSlide = useCallback(() => {
-        if (isAnimating) return;
+        if (isAnimating || interiors.length === 0) return;
         setIsAnimating(true);
 
         const tl = gsap.timeline({
@@ -70,12 +84,9 @@ const Interior = () => {
             opacity: 0.4,
             duration: 0.6,
             yoyo: true,
-            repeat: 1,
-            onRepeat: () => {
-                // This is where we'd ideally swap the image source if we had different images
-            }
+            repeat: 1
         });
-    }, [currentIndex, isAnimating]);
+    }, [currentIndex, isAnimating, interiors.length]);
 
     // Auto-slide effect
     useEffect(() => {
@@ -84,13 +95,16 @@ const Interior = () => {
         return () => clearTimeout(timer);
     }, [changeSlide]);
 
+    const activeItem = interiors[currentIndex] || interiors[0] || {};
+    const upcomingItem = interiors[nextIndex % interiors.length] || interiors[0] || {};
+
     return (
         <div className="interior-container">
             <div className="interior-bg-wrapper">
                 <img
                     ref={bgRef}
-                    src={interiors[currentIndex].image}
-                    alt="Background"
+                    src={activeItem.image}
+                    alt={activeItem.title}
                     className="interior-bg"
                 />
                 <div className="interior-overlay"></div>
@@ -100,19 +114,19 @@ const Interior = () => {
                 <h1
                     ref={titleRef}
                     className="interior-title"
-                    onClick={() => navigate('/architecture/interior/list', { state: { selectedId: interiors[currentIndex].id } })}
+                    onClick={() => navigate('/architecture/interior/list', { state: { selectedId: activeItem.id } })}
                     style={{ cursor: 'pointer' }}
                 >
-                    {interiors[currentIndex].title}
+                    {activeItem.title}
                 </h1>
-                <p ref={subtitleRef} className="interior-subtitle">{interiors[currentIndex].subtitle}</p>
+                <p ref={subtitleRef} className="interior-subtitle">{activeItem.subtitle}</p>
                 <div ref={counterRef} className="interior-counter">
                     0{currentIndex + 1}/0{interiors.length}
                 </div>
             </div>
 
             <div className="interior-nav-right" onClick={changeSlide}>
-                <span ref={nextTitleRef} className="nav-next-title">{interiors[nextIndex].title}</span>
+                <span ref={nextTitleRef} className="nav-next-title">{upcomingItem.title}</span>
                 <button className="nav-btn-prof">
                     <div className="arrow-circle-next">→</div>
                 </button>

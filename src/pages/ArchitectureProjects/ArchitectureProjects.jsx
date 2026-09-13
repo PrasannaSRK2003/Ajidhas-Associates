@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useContent } from '../../context/ContentContext';
 import './ArchitectureProjects.css';
 
 import arch1 from '../../assets/arch_project_1.png';
@@ -9,7 +10,7 @@ import arch3 from '../../assets/villa_solenne.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projects = [
+const defaultProjects = [
     {
         id: 1,
         title: 'casa serena',
@@ -44,45 +45,60 @@ const projects = [
 
 const ArchitectureProjects = () => {
     const containerRef = useRef(null);
+    const { getImage, wpContent } = useContent();
+
+    const projects = (wpContent?.architecture?.projects && Array.isArray(wpContent.architecture.projects) && wpContent.architecture.projects.length > 0)
+        ? wpContent.architecture.projects.map((item, idx) => ({
+            id: item.id || idx + 1,
+            title: item.title || defaultProjects[idx % defaultProjects.length]?.title || `Project ${idx + 1}`,
+            location: item.location || defaultProjects[idx % defaultProjects.length]?.location || 'BARCELONA',
+            year: item.year || defaultProjects[idx % defaultProjects.length]?.year || '2025',
+            coords: item.coords || defaultProjects[idx % defaultProjects.length]?.coords || '41.3851° N, 2.1734° E',
+            description: item.description || defaultProjects[idx % defaultProjects.length]?.description || '',
+            designer: item.designer || defaultProjects[idx % defaultProjects.length]?.designer || 'ANTONI MARTÍNEZ',
+            image: item.image || getImage('architecture', `project_${idx}`, defaultProjects[idx % defaultProjects.length]?.image || arch1)
+        }))
+        : defaultProjects.map((item, idx) => ({
+            ...item,
+            image: getImage('architecture', `project_${idx}`, item.image)
+        }));
 
     useEffect(() => {
         const ctx = gsap.context(() => {
-        const sections = gsap.utils.toArray('.project-editorial-section');
+            const sections = gsap.utils.toArray('.project-editorial-section');
 
-        sections.forEach((section) => {
-            const title = section.querySelector('.editorial-title');
-            const desc = section.querySelector('.editorial-description');
-            const meta = section.querySelectorAll('.editorial-meta-item');
-            const designer = section.querySelector('.editorial-designer');
-            const bgImg = section.querySelector('.editorial-bg img');
+            sections.forEach((section) => {
+                const title = section.querySelector('.editorial-title');
+                const desc = section.querySelector('.editorial-description');
+                const meta = section.querySelectorAll('.editorial-meta-item');
+                const designer = section.querySelector('.editorial-designer');
+                const bgImg = section.querySelector('.editorial-bg img');
 
-            const tl = gsap.timeline({
-                scrollTrigger: {
-                    trigger: section,
-                    start: 'top 80%',
-                    toggleActions: 'play none none reverse'
-                }
+                const tl = gsap.timeline({
+                    scrollTrigger: {
+                        trigger: section,
+                        start: 'top 80%',
+                        toggleActions: 'play none none reverse'
+                    }
+                });
+
+                tl.fromTo(bgImg,
+                    { scale: 1.2, filter: 'brightness(0)' },
+                    { scale: 1, filter: 'brightness(0.6)', duration: 2, ease: 'power2.out' }
+                )
+                    .fromTo(title, { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out' }, '-=1.5')
+                    .fromTo(desc, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, '-=0.8')
+                    .fromTo(meta, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1, stagger: 0.2 }, '-=0.6')
+                    .fromTo(designer, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 1 }, '-=0.6');
             });
-
-            tl.fromTo(bgImg,
-                { scale: 1.2, filter: 'brightness(0)' },
-                { scale: 1, filter: 'brightness(0.6)', duration: 2, ease: 'power2.out' }
-            )
-                .fromTo(title, { y: 100, opacity: 0 }, { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out' }, '-=1.5')
-                .fromTo(desc, { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'power3.out' }, '-=0.8')
-                .fromTo(meta, { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 1, stagger: 0.2 }, '-=0.6')
-                .fromTo(designer, { x: -30, opacity: 0 }, { x: 0, opacity: 1, duration: 1 }, '-=0.6');
-        });
 
         }, containerRef);
 
         return () => ctx.revert();
-    }, []);
+    }, [projects.length]);
 
     return (
         <div className="arch-projects-editorial" ref={containerRef}>
-
-
             {projects.map((project, index) => (
                 <section key={project.id} className={`project-editorial-section ${index % 2 !== 0 ? 'layout-left' : ''}`}>
                     <div className="editorial-bg">

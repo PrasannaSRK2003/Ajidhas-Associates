@@ -27,10 +27,10 @@ const GallerySeries = () => {
 
     const galleryImages = (wpContent?.gallery?.items && Array.isArray(wpContent.gallery.items) && wpContent.gallery.items.length > 0)
         ? wpContent.gallery.items.map((item, idx) => ({
-            id: idx + 1,
-            title: item.title || defaultGalleryImages[idx]?.title || `Series ${idx + 1}`,
-            label: item.label || defaultGalleryImages[idx]?.label || `Series ${(idx + 1).toString().padStart(2, '0')}`,
-            image: item.image || getImage('gallery', idx, defaultGalleryImages[idx]?.image || art1)
+            id: item.id || idx + 1,
+            title: item.title || defaultGalleryImages[idx % defaultGalleryImages.length]?.title || `Series ${idx + 1}`,
+            label: item.label || defaultGalleryImages[idx % defaultGalleryImages.length]?.label || `Series ${(idx + 1).toString().padStart(2, '0')}`,
+            image: item.image || getImage('gallery', idx, defaultGalleryImages[idx % defaultGalleryImages.length]?.image || art1)
         }))
         : defaultGalleryImages.map((item, idx) => ({
             ...item,

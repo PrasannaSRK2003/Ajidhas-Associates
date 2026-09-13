@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useContent } from '../../context/ContentContext';
 import './Collaboration.css';
 
 // Using existing high-quality assets
@@ -10,7 +11,7 @@ import villa1 from '../../assets/villa_lumiere.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const collabData = [
+const defaultCollabData = [
     {
         id: 1,
         title: "to the unknown",
@@ -48,8 +49,24 @@ const collabData = [
 const Collaboration = () => {
     const containerRef = useRef(null);
     const sectionsRef = useRef([]);
+    const { getImage, wpContent } = useContent();
+
+    const collabData = (wpContent?.collaboration?.items && Array.isArray(wpContent.collaboration.items) && wpContent.collaboration.items.length > 0)
+        ? wpContent.collaboration.items.map((item, idx) => ({
+            id: item.id || idx + 1,
+            title: item.title || defaultCollabData[idx % defaultCollabData.length]?.title || `Collaboration ${idx + 1}`,
+            subtitle: item.subtitle || defaultCollabData[idx % defaultCollabData.length]?.subtitle || 'AND BEYOND',
+            desc: item.desc || item.description || defaultCollabData[idx % defaultCollabData.length]?.desc || '',
+            label: item.label || defaultCollabData[idx % defaultCollabData.length]?.label || 'COLLABORATION',
+            image: item.image || getImage('collaboration', `item_${idx}`, defaultCollabData[idx % defaultCollabData.length]?.image || villa1)
+        }))
+        : defaultCollabData.map((item, idx) => ({
+            ...item,
+            image: getImage('collaboration', `item_${idx}`, item.image)
+        }));
 
     useEffect(() => {
+        sectionsRef.current = sectionsRef.current.slice(0, collabData.length);
         const ctx = gsap.context(() => {
             const sections = sectionsRef.current;
 
@@ -177,9 +194,10 @@ const Collaboration = () => {
         }, containerRef);
 
         return () => ctx.revert();
-    }, []);
+    }, [collabData.length]);
 
     const splitText = (text) => {
+        if (!text) return null;
         return text.split('').map((char, index) => (
             <span key={index} className="title-char" style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : 'normal' }}>
                 {char}

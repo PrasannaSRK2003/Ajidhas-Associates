@@ -4,9 +4,25 @@ import { fetchSiteContent, fetchProjects, submitInquiry } from '../services/api'
 const ContentContext = createContext(null);
 
 export const ContentProvider = ({ children }) => {
-    const [wpContent, setWpContent] = useState(null);
-    const [wpProjects, setWpProjects] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [wpContent, setWpContent] = useState(() => {
+        try {
+            const cached = localStorage.getItem('ajidhas_wp_content');
+            return cached ? JSON.parse(cached) : null;
+        } catch (e) {
+            return null;
+        }
+    });
+
+    const [wpProjects, setWpProjects] = useState(() => {
+        try {
+            const cached = localStorage.getItem('ajidhas_wp_projects');
+            return cached ? JSON.parse(cached) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
+    const [loading, setLoading] = useState(!wpContent);
 
     useEffect(() => {
         let isMounted = true;
@@ -16,8 +32,14 @@ export const ContentProvider = ({ children }) => {
                 fetchProjects()
             ]);
             if (isMounted) {
-                if (contentData) setWpContent(contentData);
-                if (projectsData && projectsData.length > 0) setWpProjects(projectsData);
+                if (contentData) {
+                    setWpContent(contentData);
+                    try { localStorage.setItem('ajidhas_wp_content', JSON.stringify(contentData)); } catch(e) {}
+                }
+                if (projectsData && projectsData.length > 0) {
+                    setWpProjects(projectsData);
+                    try { localStorage.setItem('ajidhas_wp_projects', JSON.stringify(projectsData)); } catch(e) {}
+                }
                 setLoading(false);
             }
         };

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './InteriorProjectList.css';
 
 import buildingNight from '../../assets/building_night.png';
@@ -8,7 +9,7 @@ import villaLumiere from '../../assets/villa_lumiere.png';
 import villaSolenne from '../../assets/villa_solenne.png';
 import archProject1 from '../../assets/arch_project_1.png';
 
-const projects = [
+const defaultProjects = [
     { id: 1, title: 'Forty One Oaks', location: 'Portola Valley, CA', image: villaLumiere },
     { id: 2, title: 'Sentinal Ridge', location: 'Howell Mountain, CA', image: villaSolenne },
     { id: 3, title: 'White Sands', location: 'Carmel-by-the-sea, CA', image: archProject1 },
@@ -22,22 +23,35 @@ const projects = [
 
 const InteriorProjectList = () => {
     const location = useLocation();
-    const initialId = location.state?.selectedId || 5;
+    const { getImage, wpContent } = useContent();
+    const initialId = location.state?.selectedId || 1;
     const [activeId] = useState(initialId);
     const [introComplete, setIntroComplete] = useState(false);
     const imageRef = useRef(null);
     const introRef = useRef(null);
 
+    const projects = (wpContent?.interior?.items && Array.isArray(wpContent.interior.items) && wpContent.interior.items.length > 0)
+        ? wpContent.interior.items.map((item, idx) => ({
+            id: item.id || idx + 1,
+            title: item.title || defaultProjects[idx % defaultProjects.length]?.title || `Interior Project ${idx + 1}`,
+            location: item.location || defaultProjects[idx % defaultProjects.length]?.location || 'California',
+            image: item.image || getImage('interior', `slide_${idx}`, defaultProjects[idx % defaultProjects.length]?.image || villaLumiere)
+        }))
+        : defaultProjects.map((item, idx) => ({
+            ...item,
+            image: getImage('interior', `slide_${idx}`, item.image)
+        }));
+
     const activeProject = projects.find(p => p.id === activeId) || projects[0];
 
     // Dynamically select 5 images for the intro, centering the active one
-    const activeIndex = projects.findIndex(p => p.id === activeId);
+    const activeIndex = Math.max(0, projects.findIndex(p => p.id === activeId));
     const getWrappedIndex = (idx) => (idx + projects.length) % projects.length;
 
     const introImages = [
         projects[getWrappedIndex(activeIndex - 2)],
         projects[getWrappedIndex(activeIndex - 1)],
-        projects[activeIndex], // Center one (Active Project)
+        projects[activeIndex] || projects[0], // Center one (Active Project)
         projects[getWrappedIndex(activeIndex + 1)],
         projects[getWrappedIndex(activeIndex + 2)]
     ];

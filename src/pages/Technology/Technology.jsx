@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './Technology.css';
 
 import buildingNight from '../../assets/villa_solenne.png';
@@ -8,7 +9,7 @@ import arch2 from '../../assets/arch_project_2.png';
 import villa1 from '../../assets/villa_lumiere.png';
 import villa2 from '../../assets/villa_solenne.png';
 
-const techItems = [
+const defaultTechItems = [
     {
         id: 1,
         title: "Notes on Vision",
@@ -61,6 +62,8 @@ const techItems = [
     }
 ];
 
+const defaultImages = [buildingNight, arch1, arch2, villa1, villa2];
+
 const Technology = () => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [hoveredItem, setHoveredItem] = useState(null);
@@ -68,6 +71,29 @@ const Technology = () => {
     const initialCardRef = useRef(null);
     const marqueeTween = useRef(null);
     const bottomTextRef = useRef(null);
+    const { getText, getImage, wpContent } = useContent();
+
+    const mainTitle = getText('technology', 'header_title', 'TECHNOLOGY');
+    const subtitle = getText('technology', 'subtitle', 'Innovation');
+
+    const techItems = (wpContent?.technology?.items && Array.isArray(wpContent.technology.items) && wpContent.technology.items.length > 0)
+        ? wpContent.technology.items.map((item, idx) => {
+            const defaultItem = defaultTechItems[idx % defaultTechItems.length];
+            return {
+                id: item.id || idx + 1,
+                title: item.title || defaultItem.title,
+                subtitle: item.subtitle || defaultItem.subtitle,
+                description: item.desc || item.description || defaultItem.description,
+                year: item.year || defaultItem.year,
+                location: item.location || defaultItem.location,
+                image: item.image || getImage('technology', `item_${idx}`, defaultImages[idx % defaultImages.length]),
+                subImages: item.subImages || defaultItem.subImages
+            };
+        })
+        : defaultTechItems.map((item, idx) => ({
+            ...item,
+            image: getImage('technology', `item_${idx}`, defaultImages[idx % defaultImages.length])
+        }));
 
     useEffect(() => {
         // Initial Entrance Animation
@@ -107,7 +133,7 @@ const Technology = () => {
         return () => {
             if (marqueeTween.current) marqueeTween.current.kill();
         };
-    }, []);
+    }, [techItems.length]);
 
     useEffect(() => {
         if (marqueeTween.current) {
@@ -120,27 +146,25 @@ const Technology = () => {
                 );
             } else {
                 marqueeTween.current.play();
-                // Animate back to "TECHNOLOGY"
+                // Animate back to mainTitle
                 gsap.fromTo(bottomTextRef.current,
                     { y: -20, opacity: 0 },
                     { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }
                 );
             }
         }
-    }, [hoveredItem]);
+    }, [hoveredItem, mainTitle]);
 
     return (
         <div className="technology-page">
-
-
             {/* Initial Entrance Card */}
             {!isLoaded && (
                 <div className="initial-card-overlay">
                     <div className="initial-card" ref={initialCardRef}>
-                        <img src={techItems[0].image} alt="Tech" />
+                        <img src={techItems[0]?.image || buildingNight} alt="Tech" />
                         <div className="initial-card-text">
-                            <span>Innovation</span>
-                            <h2>TECHNOLOGY</h2>
+                            <span>{subtitle}</span>
+                            <h2>{mainTitle}</h2>
                         </div>
                     </div>
                 </div>
@@ -187,7 +211,7 @@ const Technology = () => {
             {/* Dynamic Bottom Title */}
             <div className="tech-page-title">
                 <h1 ref={bottomTextRef}>
-                    {hoveredItem ? hoveredItem.title : "TECHNOLOGY"}
+                    {hoveredItem ? hoveredItem.title : mainTitle}
                 </h1>
             </div>
         </div>
