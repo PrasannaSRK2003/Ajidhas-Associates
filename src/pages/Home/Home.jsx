@@ -1,132 +1,57 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gsap } from 'gsap';
 import { useContent } from '../../context/ContentContext';
 import './Home.css';
 
-import waitingHall from '../../assets/waiting_hall.jpeg';
+import terracottaHero from '../../assets/home_hero_terracotta.png';
 import logoImg from '../../assets/logo.png';
 
 const Home = () => {
     const { getText, getImage } = useContent();
-    const textRef = useRef(null);
-    const buttonsRef = useRef(null);
-    const bgImageRef = useRef(null);
     const navigate = useNavigate();
 
     const currentLogo = getImage('general', 'logo_url', logoImg);
-    const currentBg = getImage('home', 'bg_image', waitingHall);
     const heroTitle = getText('home', 'hero_title', 'Ajidhas and Associates');
     const heroSubtitle = getText('home', 'hero_subtitle', 'Architecture & Art Studio');
     const artBtnText = getText('home', 'art_button_text', 'Art');
     const archBtnText = getText('home', 'architecture_button_text', 'Architecture');
 
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            const tl = gsap.timeline();
-            tl.fromTo(
-                textRef.current.children,
-                { y: 40, opacity: 0, filter: 'blur(10px)' },
-                {
-                    y: 0,
-                    opacity: 1,
-                    filter: 'blur(0px)',
-                    duration: 1.2,
-                    stagger: 0.15,
-                    ease: 'power3.out',
-                }
-            );
-
-            tl.fromTo(
-                buttonsRef.current.children,
-                { y: 30, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-                {
-                    y: 0,
-                    opacity: 1,
-                    scale: 1,
-                    filter: 'blur(0px)',
-                    duration: 1,
-                    stagger: 0.15,
-                    ease: 'back.out(1.5)',
-                },
-                '-=0.8'
-            );
-        });
-
-        return () => ctx.revert();
-    }, []);
-
-    useEffect(() => {
-        let xTo = gsap.quickTo(textRef.current, "x", { duration: 0.8, ease: "power3" }),
-            yTo = gsap.quickTo(textRef.current, "y", { duration: 0.8, ease: "power3" }),
-            rotXTo = gsap.quickTo(textRef.current, "rotationX", { duration: 0.8, ease: "power3" }),
-            rotYTo = gsap.quickTo(textRef.current, "rotationY", { duration: 0.8, ease: "power3" });
-
-        let btnXTo = gsap.quickTo(buttonsRef.current, "x", { duration: 0.8, ease: "power3" }),
-            btnYTo = gsap.quickTo(buttonsRef.current, "y", { duration: 0.8, ease: "power3" }),
-            btnRotXTo = gsap.quickTo(buttonsRef.current, "rotationX", { duration: 0.8, ease: "power3" }),
-            btnRotYTo = gsap.quickTo(buttonsRef.current, "rotationY", { duration: 0.8, ease: "power3" });
-
-        let bgXTo = gsap.quickTo(bgImageRef.current, "x", { duration: 1, ease: "power2.out" }),
-            bgYTo = gsap.quickTo(bgImageRef.current, "y", { duration: 1, ease: "power2.out" });
-
-        const handleMouseMove = (e) => {
-            const { clientX, clientY } = e;
-            const x = (clientX / window.innerWidth) - 0.5;
-            const y = (clientY / window.innerHeight) - 0.5;
-
-            rotYTo(x * 10);
-            rotXTo(-y * 10);
-            xTo(x * 15);
-            yTo(y * 15);
-
-            btnRotYTo(x * 12);
-            btnRotXTo(-y * 12);
-            btnXTo(x * 20);
-            btnYTo(y * 20);
-
-            bgXTo(-x * 20);
-            bgYTo(-y * 20);
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, []);
-
     return (
-        <div className="home-page-new">
-            <div className="home-background">
-                <img
-                    ref={bgImageRef}
-                    src={currentBg}
-                    alt="Background"
-                    className="bg-slide active"
-                />
-                <div className="home-overlay"></div>
+        <main className="home-page-new">
+            <div className="home-background" aria-hidden="true">
+                <img src={terracottaHero} alt="" className="hero-image" />
             </div>
 
-            <section className="hero-section-new">
-                <div className="hero-content-new" ref={textRef}>
-                    <img src={currentLogo} alt="Logo" className="hero-logo" />
-                    <h1>{heroTitle}</h1>
+            <section className="hero-section-new" aria-labelledby="home-title">
+                <div className="hero-content-new">
+                    <div className="hero-logo-3d">
+                        <img src={currentLogo} alt="Ajidhas logo" className="hero-logo-face hero-logo-front" />
+                        <img src={currentLogo} alt="" aria-hidden="true" className="hero-logo-face hero-logo-back" />
+                    </div>
+                    <h1 id="home-title">{heroTitle}</h1>
                     <p className="hero-subtitle">{heroSubtitle}</p>
                 </div>
 
-                <div className="hero-buttons" ref={buttonsRef}>
+                <div className="hero-buttons" aria-label="Choose a discipline">
                     <button className="hero-btn" onClick={() => navigate('/art')}>
                         <span className="btn-text">{artBtnText}</span>
-                        <span className="btn-arrow">→</span>
+                        <span className="btn-arrow" aria-hidden="true">→</span>
                     </button>
                     <button className="hero-btn" onClick={() => navigate('/architecture')}>
                         <span className="btn-text">{archBtnText}</span>
-                        <span className="btn-arrow">→</span>
+                        <span className="btn-arrow" aria-hidden="true">→</span>
                     </button>
                 </div>
+
+                <aside className="hero-editorial-details" aria-hidden="true">
+                    <div className="editorial-brand">Ajidhas</div>
+                    <div className="editorial-manifesto">Spaces<br />Ideas<br />People<br />For a finer<br />tomorrow<i /></div>
+                    <div className="editorial-location"><i />Chennai <em>/</em> Dubai</div>
+                    <div className="editorial-index"><span>Intro</span><i /><strong>01</strong><b>•<br />•<br />•</b></div>
+                    <div className="editorial-statement">Spaces for a finer tomorrow<i /></div>
+                </aside>
             </section>
-        </div>
+        </main>
     );
 };
 
