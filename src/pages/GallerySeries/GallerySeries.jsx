@@ -54,6 +54,8 @@ const GallerySeries = () => {
                     className={`gallery-3d-track ${isPaused ? 'paused' : ''}`}
                     onMouseEnter={() => setIsPaused(true)}
                     onMouseLeave={() => setIsPaused(false)}
+                    onTouchStart={() => setIsPaused(true)}
+                    onTouchEnd={() => setIsPaused(false)}
                 >
                     {displayImages.map((item, index) => (
                         <div key={`${item.id}-${index}`} className="gallery-card-container">

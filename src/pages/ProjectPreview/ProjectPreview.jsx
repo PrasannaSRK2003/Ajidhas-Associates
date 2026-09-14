@@ -2,13 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IoAddOutline } from 'react-icons/io5';
 import { gsap } from 'gsap';
+import { useContent } from '../../context/ContentContext';
 import './ProjectPreview.css';
 
 import art1 from '../../assets/art_1.png';
 import art2 from '../../assets/art_2.png';
 import art3 from '../../assets/art_3.png';
 
-const projectImages = {
+const defaultProjectImages = {
     1: [art1, art2, art3, art1, art2, art3, art1, art2],
     2: [art2, art3, art1, art2, art3, art1, art2, art3],
     3: [art3, art1, art2, art3, art1, art2, art3, art1],
@@ -17,7 +18,7 @@ const projectImages = {
     6: [art3, art1, art2, art3, art1, art2, art3, art1]
 };
 
-const projectData = {
+const defaultProjectData = {
     1: { title: 'Ethereal Silence', category: 'Series 01', year: '2025' },
     2: { title: 'Bronze Form No. 4', category: 'Series 02', year: '2024' },
     3: { title: 'Monolith', category: 'Series 03', year: '2025' },
@@ -29,8 +30,68 @@ const projectData = {
 const ProjectPreview = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const images = projectImages[id] || projectImages[1];
-    const project = projectData[id] || projectData[1];
+    const { wpContent, wpProjects, getText } = useContent();
+
+    // 1. Resolve Dynamic Project Info from WP CRM or Fallback
+    const resolvedProject = (() => {
+        const previewItems = wpContent?.project_preview?.items || wpContent?.project_preview?.projects;
+        if (Array.isArray(previewItems) && previewItems.length > 0) {
+            const found = previewItems.find(p => String(p.id) === String(id)) || previewItems[parseInt(id) - 1];
+            if (found) {
+                return {
+                    title: found.title || defaultProjectData[id]?.title || `Project ${id}`,
+                    category: found.category || found.label || defaultProjectData[id]?.category || `Series 0${id}`,
+                    year: found.year || defaultProjectData[id]?.year || '2025',
+                    images: found.images || [found.image1, found.image2, found.image3].filter(Boolean)
+                };
+            }
+        }
+
+        if (Array.isArray(wpProjects) && wpProjects.length > 0) {
+            const wpProj = wpProjects.find(p => String(p.id) === String(id)) || wpProjects[parseInt(id) - 1];
+            if (wpProj) {
+                return {
+                    title: wpProj.title?.rendered || wpProj.title || defaultProjectData[id]?.title,
+                    category: wpProj.category || wpProj.project_type || defaultProjectData[id]?.category || 'Series 01',
+                    year: wpProj.year || '2025',
+                    images: wpProj.gallery || (wpProj.featured_image ? [wpProj.featured_image] : null)
+                };
+            }
+        }
+
+        const galleryItems = wpContent?.gallery?.items || wpContent?.art?.items;
+        if (Array.isArray(galleryItems) && galleryItems.length > 0) {
+            const item = galleryItems[parseInt(id) - 1] || galleryItems[0];
+            if (item) {
+                return {
+                    title: item.title || defaultProjectData[id]?.title,
+                    category: item.label || item.category || defaultProjectData[id]?.category || `Series 0${id}`,
+                    year: item.year || defaultProjectData[id]?.year || '2025',
+                    images: item.image ? [item.image] : null
+                };
+            }
+        }
+
+        return defaultProjectData[id] || defaultProjectData[1];
+    })();
+
+    // 2. Resolve Dynamic Project Images array for 3D Ring
+    const images = (() => {
+        const defaultImgs = defaultProjectImages[id] || defaultProjectImages[1];
+        if (resolvedProject?.images && Array.isArray(resolvedProject.images) && resolvedProject.images.length > 0) {
+            const customImgs = resolvedProject.images.filter(img => typeof img === 'string' && img.trim() !== '');
+            if (customImgs.length > 0) {
+                const ringImgs = [];
+                for (let i = 0; i < 8; i++) {
+                    ringImgs.push(customImgs[i % customImgs.length]);
+                }
+                return ringImgs;
+            }
+        }
+        return defaultImgs;
+    })();
+
+    const project = resolvedProject;
 
     const [hoveredIndex, setHoveredIndex] = useState(null);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -116,6 +177,8 @@ const ProjectPreview = () => {
         return () => cancelAnimationFrame(requestRef.current);
     }, [angleStep, id, total]);
 
+    const studioName = getText('general', 'site_title', 'AJIDHAS ASSOCIATES');
+
     return (
         <div className="project-preview-container circular-layout">
             {/* Dynamic Blurred Background */}
@@ -184,9 +247,8 @@ const ProjectPreview = () => {
 
             <footer className="preview-footer">
                 <div className="footer-meta">
-                    <span>{project.year} AJIDHAS ASSOCIATES</span>
+                    <span>{project.year} {studioName}</span>
                 </div>
-               
             </footer>
         </div>
     );

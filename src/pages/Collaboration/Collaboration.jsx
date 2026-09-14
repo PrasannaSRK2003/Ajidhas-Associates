@@ -101,30 +101,9 @@ const Collaboration = () => {
                     }
                 );
 
-                // 2. Dynamic Brightness/Filter on Scroll
-                gsap.fromTo(bgImg,
-                    { filter: 'brightness(0.3) contrast(1.2) saturate(0.8)' },
-                    {
-                        filter: 'brightness(0.6) contrast(1) saturate(1.1)',
-                        scrollTrigger: {
-                            trigger: section,
-                            start: 'top center',
-                            end: 'bottom center',
-                            scrub: true
-                        }
-                    }
-                );
+               
 
-                // 3. Overlay Opacity Shift
-                gsap.to(bgOverlay, {
-                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.8) 100%)',
-                    scrollTrigger: {
-                        trigger: section,
-                        start: 'top bottom',
-                        end: 'bottom top',
-                        scrub: true
-                    }
-                });
+              
 
                 // --- Content Parallax ---
                 gsap.to(contentLeft, {

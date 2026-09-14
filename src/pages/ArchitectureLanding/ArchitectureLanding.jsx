@@ -77,7 +77,6 @@ const ArchitectureLanding = () => {
             <div className="arch-content">
                 <div className="arch-header" ref={headerRef}>
                     <h1>{headerTitle}</h1>
-                   
                 </div>
 
                 <div className="arch-grid" ref={gridRef}>

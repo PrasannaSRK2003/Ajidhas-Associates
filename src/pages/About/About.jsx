@@ -61,6 +61,9 @@ const About = () => {
     const activeMember = teamMembersList[activeIndex] || teamMembersList[0] || defaultTeamMembers[0];
     const firstName = (activeMember?.name || 'Ajidhas').split(' ')[0];
 
+    const touchStartX = useRef(0);
+    const touchDragRef = useRef(false);
+
     useEffect(() => {
         const applyRotation = () => {
             const rotation = rotationRef.current;
@@ -69,13 +72,19 @@ const About = () => {
             let maxZ = -Infinity;
             let frontCardIndex = 0;
 
+            const width = window.innerWidth;
+            const isMobile = width <= 768;
+            const isSmallMobile = width <= 480;
+            const isTablet = width > 768 && width <= 1024;
+
+            const radiusX = isSmallMobile ? 95 : (isMobile ? 130 : (isTablet ? 220 : 350));
+            const radiusZ = isSmallMobile ? 140 : (isMobile ? 190 : (isTablet ? 280 : 400));
+
             cardRefs.current.forEach((card, cardIndex) => {
                 if (!card) return;
 
                 const currentAngle = (angleStep * cardIndex + rotation) % 360;
                 const angleRad = (currentAngle * Math.PI) / 180;
-                const radiusX = 350;
-                const radiusZ = 400;
                 const x = Math.sin(angleRad) * radiusX;
                 const z = Math.cos(angleRad) * radiusZ;
                 const normalizedZ = (z + radiusZ) / (2 * radiusZ);
@@ -89,11 +98,11 @@ const About = () => {
                     gsap.set(card, {
                         x,
                         z,
-                        scale: normalizedZ * 0.5 + 0.5,
-                        rotationY: -Math.sin(angleRad) * 30,
+                        scale: normalizedZ * (isMobile ? 0.35 : 0.5) + (isMobile ? 0.65 : 0.5),
+                        rotationY: -Math.sin(angleRad) * (isMobile ? 16 : 30),
                         zIndex: Math.round(z + radiusZ),
-                        opacity: normalizedZ * 0.8 + 0.2,
-                        filter: `blur(${(1 - normalizedZ) * 8}px)`,
+                        opacity: normalizedZ * 0.75 + 0.25,
+                        filter: `blur(${(1 - normalizedZ) * (isMobile ? 3 : 8)}px)`,
                     });
                 } catch (e) {
                     // ignore
@@ -114,12 +123,41 @@ const About = () => {
             requestRef.current = requestAnimationFrame(animate);
         };
 
+        const handleResize = () => {
+            applyRotation();
+        };
+
+        window.addEventListener('resize', handleResize);
         applyRotation();
         requestRef.current = requestAnimationFrame(animate);
+
         return () => {
+            window.removeEventListener('resize', handleResize);
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
         };
     }, [angleStep, total]);
+
+    // Touch gesture handlers for smooth mobile interactive swipe
+    const handleTouchStart = (e) => {
+        if (e.touches && e.touches[0]) {
+            touchStartX.current = e.touches[0].clientX;
+            touchDragRef.current = true;
+            isPausedRef.current = true;
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (!touchDragRef.current || !e.touches || !e.touches[0]) return;
+        const currentX = e.touches[0].clientX;
+        const diffX = currentX - touchStartX.current;
+        rotationRef.current += diffX * 0.4;
+        touchStartX.current = currentX;
+    };
+
+    const handleTouchEnd = () => {
+        touchDragRef.current = false;
+        isPausedRef.current = false;
+    };
 
     // Entrance animation
     useEffect(() => {
@@ -169,6 +207,9 @@ const About = () => {
             ref={containerRef}
             onMouseEnter={() => { isPausedRef.current = true; }}
             onMouseLeave={() => { isPausedRef.current = false; }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
         >
             <div className="about-v2-content">
                 {/* Left Side: Dynamic Details synchronized with front 3D card */}

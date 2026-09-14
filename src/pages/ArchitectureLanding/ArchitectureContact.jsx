@@ -101,8 +101,8 @@ const ArchitectureContact = () => {
           <div className="contact-form-wrapper" ref={formRef}>
             {status === 'success' ? (
               <div className="contact-form" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '300px' }}>
-                <h3 style={{ color: '#fff', fontSize: '1.8rem', marginBottom: '10px' }}>Message Received ✓</h3>
-                <p style={{ color: '#aaa', lineHeight: '1.6', marginBottom: '20px' }}>Thank you for reaching out! Your inquiry has been saved in our CRM database and our team will get back to you shortly.</p>
+                <h3 style={{ color: 'var(--color-dark-charcoal)', fontSize: '1.8rem', marginBottom: '10px' }}>Message Received ✓</h3>
+                <p style={{ color: 'var(--color-deep-grey)', lineHeight: '1.6', marginBottom: '20px' }}>Thank you for reaching out! Your inquiry has been saved in our CRM database and our team will get back to you shortly.</p>
                 <button type="button" className="submit-btn" onClick={() => setStatus('idle')}>
                   Send Another Message
                 </button>

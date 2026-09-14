@@ -3,7 +3,7 @@
  * Plugin Name: Ajidhas & Associates CRM & Headless Content Manager
  * Plugin URI: https://ajidhasassociates.com
  * Description: Complete Headless CMS & Lead CRM solution for Ajidhas & Associates. Manage all site section text, images, background images, portfolio projects, and client inquiries from WordPress.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Ajidhas & Associates
  * Author URI: https://ajidhasassociates.com
  * Text Domain: ajidhas-crm
@@ -292,6 +292,17 @@ class Ajidhas_CRM_Content_Manager {
                     array('label' => 'Art Collection', 'url' => '/art'),
                     array('label' => 'Gallery', 'url' => '/art/gallery'),
                     array('label' => 'The Artist', 'url' => '/art/artist')
+                )
+            ),
+            'project_preview' => array(
+                'header_title' => 'Project Preview Studio',
+                'projects' => array(
+                    array('id' => 1, 'title' => 'Ethereal Silence', 'category' => 'Series 01', 'year' => '2025', 'image' => ''),
+                    array('id' => 2, 'title' => 'Bronze Form No. 4', 'category' => 'Series 02', 'year' => '2024', 'image' => ''),
+                    array('id' => 3, 'title' => 'Monolith', 'category' => 'Series 03', 'year' => '2025', 'image' => ''),
+                    array('id' => 4, 'title' => 'Urban Echo', 'category' => 'Series 04', 'year' => '2024', 'image' => ''),
+                    array('id' => 5, 'title' => 'Shadow Play', 'category' => 'Series 05', 'year' => '2025', 'image' => ''),
+                    array('id' => 6, 'title' => 'Geometric Void', 'category' => 'Series 06', 'year' => '2025', 'image' => ''),
                 )
             )
         );

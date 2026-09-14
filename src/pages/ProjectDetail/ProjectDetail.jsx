@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { IoArrowBack, IoMailOutline } from 'react-icons/io5';
+import { useContent } from '../../context/ContentContext';
 import './ProjectDetail.css';
 
 import art1 from '../../assets/art_1.png';
@@ -11,7 +12,7 @@ import art3 from '../../assets/art_3.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const projectData = {
+const defaultProjectData = {
     1: {
         title: 'Ethereal Silence',
         category: 'Series 01',
@@ -44,7 +45,73 @@ const projectData = {
 const ProjectDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const project = projectData[id] || projectData[1];
+    const { wpContent, wpProjects, getText } = useContent();
+
+    // 1. Dynamic Project Resolution
+    const resolvedProject = (() => {
+        const defaultProj = defaultProjectData[id] || defaultProjectData[1];
+
+        // A. Check wpContent.project_detail.projects
+        const detailItems = wpContent?.project_detail?.projects || wpContent?.project_detail?.items;
+        if (Array.isArray(detailItems) && detailItems.length > 0) {
+            const found = detailItems.find(p => String(p.id) === String(id)) || detailItems[parseInt(id) - 1];
+            if (found) {
+                const mainImg = found.main_image || found.mainImage || found.image || defaultProj.mainImage;
+                const rawGallery = Array.isArray(found.gallery) && found.gallery.length > 0
+                    ? found.gallery.filter(g => typeof g === 'string' && g.trim() !== '')
+                    : [mainImg, ...defaultProj.gallery];
+                return {
+                    title: found.title || defaultProj.title,
+                    category: found.category || found.label || defaultProj.category,
+                    year: found.year || defaultProj.year,
+                    artist: found.artist || getText('art', 'artist_name', defaultProj.artist),
+                    description: found.description || found.desc || defaultProj.description,
+                    mainImage: mainImg,
+                    gallery: rawGallery.length > 0 ? rawGallery : defaultProj.gallery
+                };
+            }
+        }
+
+        // B. Check wpContent.project_preview.projects
+        const previewItems = wpContent?.project_preview?.projects || wpContent?.project_preview?.items;
+        if (Array.isArray(previewItems) && previewItems.length > 0) {
+            const found = previewItems.find(p => String(p.id) === String(id)) || previewItems[parseInt(id) - 1];
+            if (found) {
+                const mainImg = found.image || found.image1 || defaultProj.mainImage;
+                return {
+                    title: found.title || defaultProj.title,
+                    category: found.category || defaultProj.category,
+                    year: found.year || defaultProj.year,
+                    artist: getText('art', 'artist_name', defaultProj.artist),
+                    description: found.desc || found.description || defaultProj.description,
+                    mainImage: mainImg,
+                    gallery: [mainImg, ...defaultProj.gallery]
+                };
+            }
+        }
+
+        // C. Check wpProjects (WP custom post types)
+        if (Array.isArray(wpProjects) && wpProjects.length > 0) {
+            const wpProj = wpProjects.find(p => String(p.id) === String(id)) || wpProjects[parseInt(id) - 1];
+            if (wpProj) {
+                const mainImg = wpProj.featured_image || defaultProj.mainImage;
+                return {
+                    title: wpProj.title?.rendered || wpProj.title || defaultProj.title,
+                    category: wpProj.category || defaultProj.category,
+                    year: wpProj.year || defaultProj.year,
+                    artist: wpProj.artist || getText('art', 'artist_name', defaultProj.artist),
+                    description: wpProj.excerpt?.rendered || wpProj.content?.rendered || defaultProj.description,
+                    mainImage: mainImg,
+                    gallery: Array.isArray(wpProj.gallery) && wpProj.gallery.length > 0 ? wpProj.gallery : defaultProj.gallery
+                };
+            }
+        }
+
+        return defaultProj;
+    })();
+
+    const project = resolvedProject;
+    const contactEmail = getText('general', 'contact_email', 'ajidhas@gmail.com');
 
     const heroRef = useRef(null);
     const galleryRef = useRef(null);
@@ -54,45 +121,45 @@ const ProjectDetail = () => {
         window.scrollTo(0, 0);
 
         const ctx = gsap.context(() => {
-        const tl = gsap.timeline();
+            const tl = gsap.timeline();
 
-        tl.fromTo('.hero-content > *',
-            { y: 50, opacity: 0 },
-            { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power3.out' }
-        );
+            tl.fromTo('.hero-content > *',
+                { y: 50, opacity: 0 },
+                { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: 'power3.out' }
+            );
 
-        tl.fromTo('.hero-image-container',
-            { scale: 1.1, opacity: 0 },
-            { scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out' },
-            '-=1'
-        );
+            tl.fromTo('.hero-image-container',
+                { scale: 1.1, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 1.5, ease: 'power3.out' },
+                '-=1'
+            );
 
-        // Gallery animations
-        gsap.fromTo('.gallery-section-title',
-            { y: 50, opacity: 0 },
-            {
-                y: 0,
-                opacity: 1,
-                scrollTrigger: {
-                    trigger: '.gallery-section',
-                    start: 'top 80%',
+            // Gallery animations
+            gsap.fromTo('.gallery-section-title',
+                { y: 50, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    scrollTrigger: {
+                        trigger: '.gallery-section',
+                        start: 'top 80%',
+                    }
                 }
-            }
-        );
+            );
 
-        gsap.fromTo('.gallery-grid-item',
-            { y: 100, opacity: 0 },
-            {
-                y: 0,
-                opacity: 1,
-                duration: 0.8,
-                stagger: 0.1,
-                scrollTrigger: {
-                    trigger: '.gallery-grid-detail',
-                    start: 'top 80%',
+            gsap.fromTo('.gallery-grid-item',
+                { y: 100, opacity: 0 },
+                {
+                    y: 0,
+                    opacity: 1,
+                    duration: 0.8,
+                    stagger: 0.1,
+                    scrollTrigger: {
+                        trigger: '.gallery-grid-detail',
+                        start: 'top 80%',
+                    }
                 }
-            }
-        );
+            );
 
         }, containerRef);
 
@@ -121,7 +188,7 @@ const ProjectDetail = () => {
                     </div>
                     <p className="project-description">{project.description}</p>
                     <div className="project-actions">
-                        <a href="mailto:ajidhas@gmail.com" className="inquire-link">
+                        <a href={`mailto:${contactEmail}`} className="inquire-link">
                             <IoMailOutline />
                             <span>Inquire about this series</span>
                         </a>
