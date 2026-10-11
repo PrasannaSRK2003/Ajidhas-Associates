@@ -1,131 +1,199 @@
-import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { gsap } from 'gsap';
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
+import { Box3, Color, Vector3 } from 'three';
 import { useContent } from '../../context/ContentContext';
 import './Home.css';
 
-import waitingHall from '../../assets/waiting_hall.jpeg';
-import logoImg from '../../assets/logo.png';
+import heroBackground from '../../assets/abstract_architecture_hero.png';
+import jaLogoModel from '../../assets/Jeeshnu logo - 3D.glb?url';
 
-const Home = () => {
-    const { getText, getImage } = useContent();
-    const textRef = useRef(null);
-    const buttonsRef = useRef(null);
-    const bgImageRef = useRef(null);
-    const navigate = useNavigate();
+const bronze = new Color('#b47843');
 
-    const currentLogo = getImage('general', 'logo_url', logoImg);
-    const currentBg = getImage('home', 'bg_image', waitingHall);
-    const heroTitle = getText('home', 'hero_title', 'Ajidhas and Associates');
-    const heroSubtitle = getText('home', 'hero_subtitle', 'Architecture & Art Studio');
-    const artBtnText = getText('home', 'art_button_text', 'Art');
-    const archBtnText = getText('home', 'architecture_button_text', 'Architecture');
-
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            const tl = gsap.timeline();
-            tl.fromTo(
-                textRef.current.children,
-                { y: 40, opacity: 0, filter: 'blur(10px)' },
-                {
-                    y: 0,
-                    opacity: 1,
-                    filter: 'blur(0px)',
-                    duration: 1.2,
-                    stagger: 0.15,
-                    ease: 'power3.out',
-                }
-            );
-
-            tl.fromTo(
-                buttonsRef.current.children,
-                { y: 30, opacity: 0, scale: 0.9, filter: 'blur(5px)' },
-                {
-                    y: 0,
-                    opacity: 1,
-                    scale: 1,
-                    filter: 'blur(0px)',
-                    duration: 1,
-                    stagger: 0.15,
-                    ease: 'back.out(1.5)',
-                },
-                '-=0.8'
-            );
+function JaLogoModel({ motionEnabled }) {
+    const { scene } = useGLTF(jaLogoModel);
+    const { object, scale, offset } = useMemo(() => {
+        const object = scene.clone(true);
+        object.traverse((child) => {
+            if (!child.isMesh) return;
+            child.material = Array.isArray(child.material)
+                ? child.material.map((material) => material.clone())
+                : child.material.clone();
+            const materials = Array.isArray(child.material) ? child.material : [child.material];
+            materials.forEach((material) => {
+                if (material.color) material.color.lerp(bronze, 0.4);
+                if ('metalness' in material) material.metalness = Math.min(material.metalness, 0.62);
+                if ('roughness' in material) material.roughness = Math.max(material.roughness, 0.2);
+            });
         });
+        const bounds = new Box3().setFromObject(object);
+        const center = bounds.getCenter(new Vector3());
+        const size = bounds.getSize(new Vector3());
+        const scale = 1.65 / Math.max(size.x, size.y, size.z, 0.001);
+        return { object, scale, offset: center.multiplyScalar(-scale).toArray() };
+    }, [scene]);
+    const rotatingGroup = useRef(null);
 
-        return () => ctx.revert();
-    }, []);
-
-    useEffect(() => {
-        let xTo = gsap.quickTo(textRef.current, "x", { duration: 0.8, ease: "power3" }),
-            yTo = gsap.quickTo(textRef.current, "y", { duration: 0.8, ease: "power3" }),
-            rotXTo = gsap.quickTo(textRef.current, "rotationX", { duration: 0.8, ease: "power3" }),
-            rotYTo = gsap.quickTo(textRef.current, "rotationY", { duration: 0.8, ease: "power3" });
-
-        let btnXTo = gsap.quickTo(buttonsRef.current, "x", { duration: 0.8, ease: "power3" }),
-            btnYTo = gsap.quickTo(buttonsRef.current, "y", { duration: 0.8, ease: "power3" }),
-            btnRotXTo = gsap.quickTo(buttonsRef.current, "rotationX", { duration: 0.8, ease: "power3" }),
-            btnRotYTo = gsap.quickTo(buttonsRef.current, "rotationY", { duration: 0.8, ease: "power3" });
-
-        let bgXTo = gsap.quickTo(bgImageRef.current, "x", { duration: 1, ease: "power2.out" }),
-            bgYTo = gsap.quickTo(bgImageRef.current, "y", { duration: 1, ease: "power2.out" });
-
-        const handleMouseMove = (e) => {
-            const { clientX, clientY } = e;
-            const x = (clientX / window.innerWidth) - 0.5;
-            const y = (clientY / window.innerHeight) - 0.5;
-
-            rotYTo(x * 10);
-            rotXTo(-y * 10);
-            xTo(x * 15);
-            yTo(y * 15);
-
-            btnRotYTo(x * 12);
-            btnRotXTo(-y * 12);
-            btnXTo(x * 20);
-            btnYTo(y * 20);
-
-            bgXTo(-x * 20);
-            bgYTo(-y * 20);
-        };
-
-        window.addEventListener('mousemove', handleMouseMove);
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-        };
-    }, []);
+    useFrame((_, delta) => {
+        if (motionEnabled && rotatingGroup.current) {
+            rotatingGroup.current.rotation.y += delta * 0.7;
+        }
+    });
 
     return (
-        <div className="home-page-new">
-            <div className="home-background">
-                <img
-                    ref={bgImageRef}
-                    src={currentBg}
-                    alt="Background"
-                    className="bg-slide active"
-                />
-                <div className="home-overlay"></div>
+        <group ref={rotatingGroup}>
+            {/* The GLB is authored in the XZ plane with its thin axis on Y. Turn
+                that face toward the camera while keeping world Y as the spin axis. */}
+            <group rotation={[Math.PI / 2, 0, 0]}>
+                <primitive object={object} scale={scale} position={offset} />
+            </group>
+        </group>
+    );
+}
+
+useGLTF.preload(jaLogoModel);
+
+const Home = () => {
+    const { getText } = useContent();
+    const navigate = useNavigate();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuToggleRef = useRef(null);
+    const firstMenuLinkRef = useRef(null);
+    const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => (
+        typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ));
+    // The approved homepage image takes precedence over any older CMS bg_image value.
+    const currentBg = heroBackground;
+    const heroTitle = getText('home', 'hero_title', 'Ajidhas and Associates');
+    const heroSubtitle = getText('home', 'hero_subtitle', 'Art and Architecture Studio');
+    const artBtnText = getText('home', 'art_button_text', 'Art');
+    const archBtnText = getText('home', 'architecture_button_text', 'Architecture');
+    const brandParts = String(heroTitle).split(/\s+(?:and|&)\s+/i);
+    const brandName = brandParts[0] || 'Ajidhas';
+    const associates = brandParts[1] || 'Associates';
+
+    useEffect(() => {
+        if (!menuOpen) return undefined;
+
+        firstMenuLinkRef.current?.focus();
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setMenuOpen(false);
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            menuToggleRef.current?.focus();
+        };
+    }, [menuOpen]);
+
+    useEffect(() => {
+        const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const handleMotionPreference = (event) => setPrefersReducedMotion(event.matches);
+
+        motionPreference.addEventListener('change', handleMotionPreference);
+        return () => motionPreference.removeEventListener('change', handleMotionPreference);
+    }, []);
+
+    const goTo = (path) => {
+        setMenuOpen(false);
+        navigate(path);
+    };
+
+    return (
+        <div className="studio-home">
+            <div className="studio-home__background" aria-hidden="true">
+                <img src={currentBg} alt="" />
+                <div className="studio-home__shade" />
             </div>
 
-            <section className="hero-section-new">
-                <div className="hero-content-new" ref={textRef}>
-                    <img src={currentLogo} alt="Logo" className="hero-logo" />
-                    <h1>{heroTitle}</h1>
-                    <p className="hero-subtitle">{heroSubtitle}</p>
-                </div>
+            <header className="studio-header">
+                <Link className="studio-header__brand" to="/" aria-label="Ajidhas Associates home">
+                    <span>AJIDHAS</span>
+                    <span>ASSOCIATES</span>
+                </Link>
+            </header>
 
-                <div className="hero-buttons" ref={buttonsRef}>
-                    <button className="hero-btn" onClick={() => navigate('/art')}>
-                        <span className="btn-text">{artBtnText}</span>
-                        <span className="btn-arrow">→</span>
-                    </button>
-                    <button className="hero-btn" onClick={() => navigate('/architecture')}>
-                        <span className="btn-text">{archBtnText}</span>
-                        <span className="btn-arrow">→</span>
-                    </button>
-                </div>
-            </section>
+            <nav className="studio-header__links" aria-label="Main navigation">
+                <button
+                    type="button"
+                    ref={menuToggleRef}
+                    className={`studio-menu-toggle${menuOpen ? ' is-open' : ''}`}
+                    aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+                    aria-expanded={menuOpen}
+                    aria-controls="studio-slide-menu"
+                    onClick={() => setMenuOpen((open) => !open)}
+                >
+                    <span />
+                    <span />
+                    <span />
+                </button>
+            </nav>
+
+            <main className="studio-hero">
+                <section className="studio-hero__identity" aria-label={`${brandName} ${associates}`}>
+                    <div className="hero-emblem-media" aria-hidden="true">
+                        <Canvas
+                            className="hero-emblem-canvas"
+                            camera={{ position: [0, 0, 3.35], fov: 35 }}
+                            dpr={[1, 1.75]}
+                            gl={{ alpha: true, antialias: true, powerPreference: 'high-performance' }}
+                            frameloop={prefersReducedMotion ? 'demand' : 'always'}
+                        >
+                            <ambientLight intensity={1.25} />
+                            <directionalLight color="#fff1dc" intensity={3.2} position={[-2.5, 3.5, 4]} />
+                            <directionalLight color="#d28a4e" intensity={2} position={[3, 1.5, -2]} />
+                            <pointLight color="#ffe1bc" intensity={12} position={[0, 1.8, 2.5]} />
+                            <Suspense fallback={null}>
+                                <JaLogoModel motionEnabled={!prefersReducedMotion} />
+                            </Suspense>
+                        </Canvas>
+                    </div>
+
+                    <div className="hero-wordmark">
+                        <h1>{brandName}</h1>
+                        <p className="hero-associates">{associates}</p>
+                    </div>
+
+                    <span className="hero-divider" aria-hidden="true" />
+                    <p className="hero-subtitle">{heroSubtitle}</p>
+
+                    <div className="hero-actions">
+                        <button className="hero-action" type="button" onClick={() => goTo('/art')}>
+                            <span>{artBtnText}</span>
+                            <span className="hero-action__arrow" aria-hidden="true">&#8594;</span>
+                        </button>
+                        <button className="hero-action" type="button" onClick={() => goTo('/architecture')}>
+                            <span>{archBtnText}</span>
+                            <span className="hero-action__arrow" aria-hidden="true">&#8594;</span>
+                        </button>
+                    </div>
+                </section>
+            </main>
+
+            <button
+                type="button"
+                className={`studio-menu-backdrop${menuOpen ? ' is-visible' : ''}`}
+                aria-label="Close navigation menu"
+                tabIndex={menuOpen ? 0 : -1}
+                onClick={() => setMenuOpen(false)}
+            />
+            <nav
+                id="studio-slide-menu"
+                className={`studio-slide-menu${menuOpen ? ' is-open' : ''}`}
+                aria-label="Expanded navigation"
+                aria-hidden={!menuOpen}
+                inert={!menuOpen}
+            >
+                <p className="studio-slide-menu__eyebrow">AJIDHAS ASSOCIATES</p>
+                <p className="studio-slide-menu__heading">Explore the studio</p>
+                <button ref={firstMenuLinkRef} type="button" onClick={() => goTo('/architecture/projects')}>Work <span>&#8599;</span></button>
+                <button type="button" onClick={() => goTo('/architecture/about')}>About <span>&#8599;</span></button>
+                <button type="button" onClick={() => goTo('/contact')}>Contact <span>&#8599;</span></button>
+                <p className="studio-slide-menu__footer">Art and architecture, thoughtfully made.</p>
+            </nav>
         </div>
     );
 };

@@ -433,3 +433,8 @@
         text-align: center;
     }
 }
+
+/* Pill-shaped navigation glass wrapper */
+.studio-header__links {
+    border-radius: 9999px !important;
+}
